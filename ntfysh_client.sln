@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32602.291
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ntfysh_client", "ntfysh_client\ntfysh_client.csproj", "{5A18D152-D620-43FE-B844-DEF30CFA50EF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5A18D152-D620-43FE-B844-DEF30CFA50EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A18D152-D620-43FE-B844-DEF30CFA50EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A18D152-D620-43FE-B844-DEF30CFA50EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A18D152-D620-43FE-B844-DEF30CFA50EF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D202877A-41B5-4879-9FFB-C5A29FC653E7}
+	EndGlobalSection
+EndGlobal
