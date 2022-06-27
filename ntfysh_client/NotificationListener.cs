@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -28,46 +29,53 @@ namespace ntfysh_client
             httpClient = new HttpClient();
             subscribedTopics = new Dictionary<string, StreamReader>();
 
+            httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
         public async Task SubscribeToTopic(string topicId)
         {
-            var stream = await httpClient.GetStreamAsync($"https://ntfy.sh/{HttpUtility.UrlEncode(topicId)}/json");
-
-            using (StreamReader reader = new StreamReader(stream))
+            HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, $"https://ntfy.sh/{HttpUtility.UrlEncode(topicId)}/json");
+            using (var response = await httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead))
             {
-                subscribedTopics.Add(topicId, reader);
-
-                try
+                using (var body = await response.Content.ReadAsStreamAsync())
                 {
-                    // The loop will be broken when this stream is closed
-                    while (true)
+                    using (StreamReader reader = new StreamReader(body))
                     {
-                        var line = await reader.ReadLineAsync();
+                        subscribedTopics.Add(topicId, reader);
 
-                        Debug.WriteLine(line);
-
-                        NtfyEventObject nev = JsonConvert.DeserializeObject<NtfyEventObject>(line);
-
-                        if (nev.Event == "message")
+                        try
                         {
-                            if (OnNotificationReceive != null)
+                            // The loop will be broken when this stream is closed
+                            while (true)
                             {
-                                var evArgs = new NotificationReceiveEventArgs(nev.Title, nev.Message);
-                                OnNotificationReceive(this, evArgs);
+                                var line = await reader.ReadLineAsync();
+
+                                Debug.WriteLine(line);
+
+                                NtfyEventObject nev = JsonConvert.DeserializeObject<NtfyEventObject>(line);
+
+                                if (nev.Event == "message")
+                                {
+                                    if (OnNotificationReceive != null)
+                                    {
+                                        var evArgs = new NotificationReceiveEventArgs(nev.Title, nev.Message);
+                                        OnNotificationReceive(this, evArgs);
+                                    }
+                                }
                             }
                         }
-                    }
-                } catch(Exception ex)
-                {
-                    Debug.WriteLine(ex);
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
 
-                    // If the topic is still registered, then that stream wasn't mean to be closed (maybe network failure?)
-                    // Restart it
-                    if (subscribedTopics.ContainsKey(topicId))
-                    {
-                        SubscribeToTopic(topicId);
+                            // If the topic is still registered, then that stream wasn't mean to be closed (maybe network failure?)
+                            // Restart it
+                            if (subscribedTopics.ContainsKey(topicId))
+                            {
+                                SubscribeToTopic(topicId);
+                            }
+                        }
                     }
                 }
             }
