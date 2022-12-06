@@ -6,36 +6,21 @@ namespace ntfysh_client
     public partial class SubscribeDialog : Form
     {
         private readonly ListBox _notificationTopics;
+        
+        public string TopicId => topicId.Text;
+        
+        public string ServerUrl => serverUrl.Text;
+        
+        public string Username => username.Text;
+        
+        public string Password => password.Text;
+
+        public string Unique => $"{topicId.Text}@{serverUrl.Text}";
 
         public SubscribeDialog(ListBox notificationTopics)
         {
             _notificationTopics = notificationTopics;
             InitializeComponent();
-        }
-
-        public string getTopicId()
-        {
-            return topicId.Text;
-        }
-        
-        public string getServerUrl()
-        {
-            return serverUrl.Text;
-        }
-        
-        public string getUsername()
-        {
-            return username.Text;
-        }
-        
-        public string getPassword()
-        {
-            return password.Text;
-        }
-
-        public string getUniqueString()
-        {
-            return $"{topicId.Text}@{serverUrl.Text}";
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -72,7 +57,7 @@ namespace ntfysh_client
                 return;
             }
 
-            if (_notificationTopics.Items.Contains(getUniqueString()))
+            if (_notificationTopics.Items.Contains(Unique))
             {
                 MessageBox.Show($"The specified topic '{topicId.Text}' on the server '{serverUrl.Text}' is already subscribed", "Topic already subscribed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.None;

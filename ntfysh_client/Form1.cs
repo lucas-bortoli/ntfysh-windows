@@ -15,33 +15,35 @@ namespace ntfysh_client
 {
     public partial class Form1 : Form
     {
-        private NotificationListener notificationListener;
+        private readonly NotificationListener _notificationListener;
+        private bool _trueExit;
 
-        public Form1()
+        public Form1(NotificationListener notificationListener)
         {
-            notificationListener = new NotificationListener();
-            notificationListener.OnNotificationReceive += OnNotificationReceive;
+            _notificationListener = notificationListener;
+            _notificationListener.OnNotificationReceive += OnNotificationReceive;
+            
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            this.LoadTopics();
-        }
+        private void Form1_Load(object sender, EventArgs e) => LoadTopics();
 
         private void subscribeNewTopic_Click(object sender, EventArgs e)
         {
-            using (var dialog = new SubscribeDialog(notificationTopics))
-            {
-                var result = dialog.ShowDialog();
+            using SubscribeDialog dialog = new SubscribeDialog(notificationTopics);
+            DialogResult result = dialog.ShowDialog();
 
-                if (result == DialogResult.OK)
-                {
-                    notificationListener.SubscribeToTopic(dialog.getUniqueString(), dialog.getTopicId(), dialog.getServerUrl(), dialog.getUsername(), dialog.getPassword());
-                    notificationTopics.Items.Add(dialog.getUniqueString());
-                    this.SaveTopicsToFile();
-                }
-            }
+            //Do not subscribe on cancelled dialog
+            if (result != DialogResult.OK) return;
+                
+            //Subscribe
+            _notificationListener.SubscribeToTopicUsingLongHttpJson(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password);
+                    
+            //Add to the user visible list
+            notificationTopics.Items.Add(dialog.Unique);
+                    
+            //Save the topics persistently
+            SaveTopicsToFile();
         }
 
         private void removeSelectedTopics_Click(object sender, EventArgs e)
@@ -50,11 +52,11 @@ namespace ntfysh_client
             {
                 string topicUniqueString = (string)notificationTopics.Items[notificationTopics.SelectedIndex];
                 
-                notificationListener.RemoveTopicByUniqueString(topicUniqueString);
+                _notificationListener.UnsubscribeFromTopic(topicUniqueString);
                 notificationTopics.Items.Remove(topicUniqueString);
             }
 
-            this.SaveTopicsToFile();
+            SaveTopicsToFile();
         }
 
         private void notificationTopics_SelectedValueChanged(object sender, EventArgs e)
@@ -64,51 +66,48 @@ namespace ntfysh_client
 
         private void notificationTopics_Click(object sender, EventArgs e)
         {
-            var ev = (MouseEventArgs)e;
-            var clickedItemIndex = notificationTopics.IndexFromPoint(new Point(ev.X, ev.Y));
+            MouseEventArgs ev = (MouseEventArgs)e;
+            int clickedItemIndex = notificationTopics.IndexFromPoint(new Point(ev.X, ev.Y));
 
-            if (clickedItemIndex == -1)
-            {
-                notificationTopics.ClearSelected();
-            }
+            if (clickedItemIndex == -1) notificationTopics.ClearSelected();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            this.Visible = false;
+            Visible = false;
         }
 
         private void notifyIcon_Click(object sender, EventArgs e)
         {
-            var mouseEv = (MouseEventArgs)e;
-            if (mouseEv.Button == MouseButtons.Left)
-            {
-                this.Visible = !this.Visible;
-                this.BringToFront();
-            }
+            MouseEventArgs mouseEv = (MouseEventArgs)e;
+            
+            if (mouseEv.Button != MouseButtons.Left) return;
+            
+            Visible = !Visible;
+            BringToFront();
         }
 
         private void showControlWindowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Visible = true;
-            this.BringToFront();
+            Visible = true;
+            BringToFront();
         }
 
         private string GetTopicsFilePath()
         {
-            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
             return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for topics file"), "topics.json");
         }
         
         private string GetLegacyTopicsFilePath()
         {
-            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
             return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for legacy topics file"), "topics.txt");
         }
 
         private void SaveTopicsToFile()
         {
-            string topicsSerialised = JsonConvert.SerializeObject(notificationListener.SubscribedTopicsByUnique.Select(st => st.Value).ToList(), Formatting.Indented);
+            string topicsSerialised = JsonConvert.SerializeObject(_notificationListener.SubscribedTopicsByUnique.Select(st => st.Value).ToList(), Formatting.Indented);
             
             File.WriteAllText(GetTopicsFilePath(), topicsSerialised);
         }
@@ -128,13 +127,13 @@ namespace ntfysh_client
                 {
                     while (!reader.EndOfStream)
                     {
-                        string legacyTopic = reader.ReadLine();
-                        legacyTopics.Add(legacyTopic);
+                        string? legacyTopic = reader.ReadLine();
+                        if (!string.IsNullOrWhiteSpace(legacyTopic)) legacyTopics.Add(legacyTopic);
                     }
                 }
 
                 //Assemble new format
-                List<SubscribedTopic> newTopics = legacyTopics.Select(lt => new SubscribedTopic(lt, "https://ntfy.sh", null, null, null)).ToList();
+                List<SubscribedTopic> newTopics = legacyTopics.Select(lt => new SubscribedTopic(lt, "https://ntfy.sh", null, null, null, null)).ToList();
 
                 string newFormatSerialised = JsonConvert.SerializeObject(newTopics, Formatting.Indented);
                 
@@ -160,9 +159,9 @@ namespace ntfysh_client
             }
 
             //Deserialise the topics
-            List<SubscribedTopic> topics = JsonConvert.DeserializeObject<List<SubscribedTopic>>(topicsSerialised);
+            List<SubscribedTopic>? topics = JsonConvert.DeserializeObject<List<SubscribedTopic>>(topicsSerialised);
 
-            if (topics == null)
+            if (topics is null)
             {
                 //TODO Deserialise error!
                 return;
@@ -171,7 +170,7 @@ namespace ntfysh_client
             //Load them in
             foreach (SubscribedTopic topic in topics)
             {
-                notificationListener.SubscribeToTopic($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                _notificationListener.SubscribeToTopicUsingLongHttpJson($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
                 notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
         }
@@ -185,24 +184,22 @@ namespace ntfysh_client
         {
             notifyIcon.Dispose();
         }
-
-        private bool trueExit = false;
+        
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Let it close
-            if (trueExit) return;
+            if (_trueExit) return;
 
-            if (e.CloseReason == CloseReason.UserClosing)
-            {
-                this.Visible = false;
-                e.Cancel = true;
-            }
+            if (e.CloseReason != CloseReason.UserClosing) return;
+            
+            Visible = false;
+            e.Cancel = true;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            trueExit = true;
-            this.Close();
+            _trueExit = true;
+            Close();
         }
 
         private void ntfyshWebsiteToolStripMenuItem_Click(object sender, EventArgs e)
@@ -212,9 +209,8 @@ namespace ntfysh_client
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var d = new AboutBox();
+            using AboutBox d = new AboutBox();
             d.ShowDialog();
-            d.Dispose();
         }
     }
 }

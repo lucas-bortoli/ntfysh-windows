@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,153 +15,147 @@ using System.Web;
 
 namespace ntfysh_client
 {
-    class NotificationListener : IDisposable
+    public class NotificationListener : IDisposable
     {
-        private HttpClient httpClient;
-        
-        private bool disposedValue;
+        private readonly HttpClient _httpClient = new();
+        private bool _isDisposed;
 
-        public readonly Dictionary<string, SubscribedTopic> SubscribedTopicsByUnique = new Dictionary<string, SubscribedTopic>();
+        public readonly Dictionary<string, SubscribedTopic> SubscribedTopicsByUnique = new();
 
         public delegate void NotificationReceiveHandler(object sender, NotificationReceiveEventArgs e);
-        public event NotificationReceiveHandler OnNotificationReceive;
+        public event NotificationReceiveHandler? OnNotificationReceive;
 
         public NotificationListener()
         {
-            httpClient = new HttpClient();
-
-            httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+            _httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        public async Task SubscribeToTopic(string unique, string topicId, string serverUrl, string username, string password)
+        private async Task ListenToTopicAsync(HttpRequestMessage message, CancellationToken cancellationToken)
         {
+            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
+            
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                using HttpResponseMessage response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                using Stream body = await response.Content.ReadAsStreamAsync();
+            
+                try
+                {
+                    StringBuilder mainBuffer = new();
+                    
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Read as much as possible
+                        byte[] buffer = new byte[8192];
+                        int readBytes = await body.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                        
+                        //Append it to our main buffer
+                        mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, readBytes));
+                        
+                        List<string> lines = mainBuffer.ToString().Split('\n').ToList();
+
+                        //If we have not yet received a full line, meaning theres only 1 part, go back to reading
+                        if (lines.Count <= 1) continue;
+                        
+                        //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
+
+                        //Separate the partial line from the full lines
+                        int partialLineIndex = lines.Count - 1;
+                        string partialLine = lines[partialLineIndex];
+                        lines.RemoveAt(partialLineIndex);
+                        
+                        //Process the full lines
+                        foreach (string line in lines) ProcessMessage(line);
+                        
+                        //Write back the partial line
+                        mainBuffer.Clear();
+                        mainBuffer.Append(partialLine);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    #if DEBUG
+                        Debug.WriteLine(ex);
+                    #endif
+                    
+                    //Fall back to the outer loop to restart the listen, or cancel if requested
+                }
+            }
+        }
+
+        private void ProcessMessage(string message)
+        {
+            #if DEBUG
+                Debug.WriteLine(message);
+            #endif
+
+            NtfyEvent? evt = JsonConvert.DeserializeObject<NtfyEvent>(message);
+                    
+            //If we hit this, ntfy sent us an invalid message
+            if (evt is null) return;
+
+            if (evt.Event == "message")
+            {
+                OnNotificationReceive?.Invoke(this, new NotificationReceiveEventArgs(evt.Title, evt.Message));
+            }
+        }
+
+        public void SubscribeToTopicUsingLongHttpJson(string unique, string topicId, string serverUrl, string? username, string? password)
+        {
+            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
+            
+            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
+            
             if (string.IsNullOrWhiteSpace(username)) username = null;
             if (string.IsNullOrWhiteSpace(password)) password = null;
             
-            HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, $"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/json");
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, $"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/json");
 
             if (username != null && password != null)
             {
                 byte[] boundCredentialsBytes = Encoding.UTF8.GetBytes($"{username}:{password}");
 
-                msg.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(boundCredentialsBytes));
+                message.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(boundCredentialsBytes));
             }
 
-            using (HttpResponseMessage response = await httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead))
-            {
-                using (Stream body = await response.Content.ReadAsStreamAsync())
-                {
-                    using (StreamReader reader = new StreamReader(body))
-                    {
-                        SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, reader));
+            CancellationTokenSource listenCanceller = new();
+            Task listenTask = ListenToTopicAsync(message, listenCanceller.Token);
 
-                        try
-                        {
-                            // The loop will be broken when this stream is closed
-                            while (true)
-                            {
-                                var line = await reader.ReadLineAsync();
-
-                                Debug.WriteLine(line);
-
-                                NtfyEventObject nev = JsonConvert.DeserializeObject<NtfyEventObject>(line);
-
-                                if (nev.Event == "message")
-                                {
-                                    if (OnNotificationReceive != null)
-                                    {
-                                        var evArgs = new NotificationReceiveEventArgs(nev.Title, nev.Message);
-                                        OnNotificationReceive(this, evArgs);
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex);
-
-                            // If the topic is still registered, then that stream wasn't mean to be closed (maybe network failure?)
-                            // Restart it
-                            if (SubscribedTopicsByUnique.ContainsKey(unique))
-                            {
-                                SubscribeToTopic(unique, topicId, serverUrl, username, password);
-                            }
-                        }
-                    }
-                }
-            }
+            SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, listenTask, listenCanceller));
         }
 
-        public void RemoveTopicByUniqueString(string topicUniqueString)
+        public void UnsubscribeFromTopic(string topicUniqueString)
         {
-            Debug.WriteLine($"Removing topic {topicUniqueString}");
-
-            if (SubscribedTopicsByUnique.ContainsKey(topicUniqueString))
-            {
-                // Not moronic to store it in a variable; this solves a race condition in SubscribeToTopic
-                SubscribedTopic topic = SubscribedTopicsByUnique[topicUniqueString];
-                topic.Stream.Close();
+            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
                 
-                SubscribedTopicsByUnique.Remove(topicUniqueString);
-            }
+            #if DEBUG
+                Debug.WriteLine($"Removing topic {topicUniqueString}");
+            #endif
+
+            //Topic isn't even subscribed, ignore
+            if (!SubscribedTopicsByUnique.TryGetValue(topicUniqueString, out SubscribedTopic topic)) return;
+            
+            //Cancel and dispose the task runner
+            topic.RunnerCanceller.Cancel();
+
+            //Wait for the task runner to shut down
+            while (!topic.Runner.IsCompleted) Thread.Sleep(100);
+            
+            //Dispose task
+            topic.Runner.Dispose();
+
+            //Remove the old topic
+            SubscribedTopicsByUnique.Remove(topicUniqueString);
         }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
-            }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~NotificationListener()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
 
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            if (_isDisposed) return;
+            
+            _httpClient.Dispose();
+            
+            _isDisposed = true;
         }
-    }
-
-    public class NotificationReceiveEventArgs : EventArgs
-    {
-        public string Title { get; private set; }
-        public string Message { get; private set; }
-
-        public NotificationReceiveEventArgs(string title, string message)
-        {
-            Title = title;
-            Message = message;
-        }
-    }
-
-    public class NtfyEventObject
-    {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-        [JsonProperty("time")]
-        public Int64 Time { get; set; }
-        [JsonProperty("event")]
-        public string Event { get; set; }
-        [JsonProperty("topic")]
-        public string Topic { get; set; }
-        [JsonProperty("message")]
-        public string Message { get; set; }
-        [JsonProperty("title")]
-        public string Title { get; set; }
     }
 }
