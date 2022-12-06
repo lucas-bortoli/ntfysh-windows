@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -204,7 +205,10 @@ namespace ntfysh_client
 
         private void ntfyshWebsiteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("https://ntfy.sh/");
+            Process.Start(new ProcessStartInfo("https://ntfy.sh/")
+            {
+                UseShellExecute = true
+            });
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
