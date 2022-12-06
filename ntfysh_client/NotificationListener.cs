@@ -20,7 +20,7 @@ namespace ntfysh_client
         
         private bool disposedValue;
 
-        public readonly Dictionary<string, SubscribedTopic> SubscribedTopics = new Dictionary<string, SubscribedTopic>();
+        public readonly Dictionary<string, SubscribedTopic> SubscribedTopicsByUnique = new Dictionary<string, SubscribedTopic>();
 
         public delegate void NotificationReceiveHandler(object sender, NotificationReceiveEventArgs e);
         public event NotificationReceiveHandler OnNotificationReceive;
@@ -33,7 +33,7 @@ namespace ntfysh_client
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        public async Task SubscribeToTopic(string topicId, string serverUrl, string username, string password)
+        public async Task SubscribeToTopic(string unique, string topicId, string serverUrl, string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username)) username = null;
             if (string.IsNullOrWhiteSpace(password)) password = null;
@@ -53,7 +53,7 @@ namespace ntfysh_client
                 {
                     using (StreamReader reader = new StreamReader(body))
                     {
-                        SubscribedTopics.Add(topicId, new SubscribedTopic(topicId, serverUrl, username, password, reader));
+                        SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, reader));
 
                         try
                         {
@@ -82,9 +82,9 @@ namespace ntfysh_client
 
                             // If the topic is still registered, then that stream wasn't mean to be closed (maybe network failure?)
                             // Restart it
-                            if (SubscribedTopics.ContainsKey(topicId))
+                            if (SubscribedTopicsByUnique.ContainsKey(unique))
                             {
-                                SubscribeToTopic(topicId, serverUrl, username, password);
+                                SubscribeToTopic(unique, topicId, serverUrl, username, password);
                             }
                         }
                     }
@@ -92,16 +92,17 @@ namespace ntfysh_client
             }
         }
 
-        public void RemoveTopic(string topicId)
+        public void RemoveTopicByUniqueString(string topicUniqueString)
         {
-            Debug.WriteLine($"Removing topic {topicId}");
+            Debug.WriteLine($"Removing topic {topicUniqueString}");
 
-            if (SubscribedTopics.ContainsKey(topicId))
+            if (SubscribedTopicsByUnique.ContainsKey(topicUniqueString))
             {
                 // Not moronic to store it in a variable; this solves a race condition in SubscribeToTopic
-                var topic = SubscribedTopics[topicId];
-                SubscribedTopics.Remove(topicId);
+                SubscribedTopic topic = SubscribedTopicsByUnique[topicUniqueString];
                 topic.Stream.Close();
+                
+                SubscribedTopicsByUnique.Remove(topicUniqueString);
             }
         }
 

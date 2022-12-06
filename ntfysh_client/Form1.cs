@@ -31,14 +31,14 @@ namespace ntfysh_client
 
         private void subscribeNewTopic_Click(object sender, EventArgs e)
         {
-            using (var dialog = new SubscribeDialog())
+            using (var dialog = new SubscribeDialog(notificationTopics))
             {
                 var result = dialog.ShowDialog();
 
                 if (result == DialogResult.OK)
                 {
-                    notificationListener.SubscribeToTopic(dialog.getTopicId(), dialog.getServerUrl(), dialog.getUsername(), dialog.getPassword());
-                    notificationTopics.Items.Add(dialog.getTopicId());
+                    notificationListener.SubscribeToTopic(dialog.getUniqueString(), dialog.getTopicId(), dialog.getServerUrl(), dialog.getUsername(), dialog.getPassword());
+                    notificationTopics.Items.Add(dialog.getUniqueString());
                     this.SaveTopicsToFile();
                 }
             }
@@ -48,9 +48,10 @@ namespace ntfysh_client
         {
             while (notificationTopics.SelectedIndex > -1)
             {
-                var topicId = notificationTopics.Items[notificationTopics.SelectedIndex];
-                notificationListener.RemoveTopic((string)topicId);
-                notificationTopics.Items.RemoveAt(notificationTopics.SelectedIndex);
+                string topicUniqueString = (string)notificationTopics.Items[notificationTopics.SelectedIndex];
+                
+                notificationListener.RemoveTopicByUniqueString(topicUniqueString);
+                notificationTopics.Items.Remove(topicUniqueString);
             }
 
             this.SaveTopicsToFile();
@@ -107,7 +108,7 @@ namespace ntfysh_client
 
         private void SaveTopicsToFile()
         {
-            string topicsSerialised = JsonConvert.SerializeObject(notificationListener.SubscribedTopics.Select(st => st.Value).ToList(), Formatting.Indented);
+            string topicsSerialised = JsonConvert.SerializeObject(notificationListener.SubscribedTopicsByUnique.Select(st => st.Value).ToList(), Formatting.Indented);
             
             File.WriteAllText(GetTopicsFilePath(), topicsSerialised);
         }
@@ -170,8 +171,8 @@ namespace ntfysh_client
             //Load them in
             foreach (SubscribedTopic topic in topics)
             {
-                notificationListener.SubscribeToTopic(topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
-                notificationTopics.Items.Add(topic.TopicId);
+                notificationListener.SubscribeToTopic($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
         }
 

@@ -5,8 +5,11 @@ namespace ntfysh_client
 {
     public partial class SubscribeDialog : Form
     {
-        public SubscribeDialog()
+        private readonly ListBox _notificationTopics;
+
+        public SubscribeDialog(ListBox notificationTopics)
         {
+            _notificationTopics = notificationTopics;
             InitializeComponent();
         }
 
@@ -28,6 +31,11 @@ namespace ntfysh_client
         public string getPassword()
         {
             return password.Text;
+        }
+
+        public string getUniqueString()
+        {
+            return $"{topicId.Text}@{serverUrl.Text}";
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -59,6 +67,14 @@ namespace ntfysh_client
             if (password.Text.Length > 0 && username.Text.Length < 1)
             {
                 MessageBox.Show("You must specify a username alongside the password", "Username not specified", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DialogResult = DialogResult.None;
+                username.Focus();
+                return;
+            }
+
+            if (_notificationTopics.Items.Contains(getUniqueString()))
+            {
+                MessageBox.Show($"The specified topic '{topicId.Text}' on the server '{serverUrl.Text}' is already subscribed", "Topic already subscribed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.None;
                 username.Focus();
                 return;
