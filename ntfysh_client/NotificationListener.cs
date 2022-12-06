@@ -37,8 +37,8 @@ namespace ntfysh_client
             
             while (!cancellationToken.IsCancellationRequested)
             {
-                using HttpResponseMessage response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                using HttpResponseMessage response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken);
             
                 try
                 {
@@ -48,7 +48,7 @@ namespace ntfysh_client
                     {
                         //Read as much as possible
                         byte[] buffer = new byte[8192];
-                        int readBytes = await body.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+                        int readBytes = await body.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                         
                         //Append it to our main buffer
                         mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, readBytes));
@@ -125,25 +125,35 @@ namespace ntfysh_client
             SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, listenTask, listenCanceller));
         }
 
-        public void UnsubscribeFromTopic(string topicUniqueString)
+        public async Task UnsubscribeFromTopicAsync(string topicUniqueString)
         {
             if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
                 
             #if DEBUG
                 Debug.WriteLine($"Removing topic {topicUniqueString}");
             #endif
+            
+            // ReSharper disable once InlineOutVariableDeclaration - Needed to avoid nullable warning
+            SubscribedTopic topic;
 
             //Topic isn't even subscribed, ignore
-            if (!SubscribedTopicsByUnique.TryGetValue(topicUniqueString, out SubscribedTopic? topic)) return;
+            if (!SubscribedTopicsByUnique.TryGetValue(topicUniqueString, out topic!)) return;
             
             //Cancel and dispose the task runner
-            topic?.RunnerCanceller.Cancel();
+            topic.RunnerCanceller.Cancel();
 
             //Wait for the task runner to shut down
-            while (topic is not null && !topic.Runner.IsCompleted) Thread.Sleep(100);
-            
+            try
+            {
+                await topic.Runner;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
             //Dispose task
-            topic?.Runner.Dispose();
+            topic.Runner.Dispose();
 
             //Remove the old topic
             SubscribedTopicsByUnique.Remove(topicUniqueString);

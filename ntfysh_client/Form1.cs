@@ -47,13 +47,13 @@ namespace ntfysh_client
             SaveTopicsToFile();
         }
 
-        private void removeSelectedTopics_Click(object sender, EventArgs e)
+        private async void removeSelectedTopics_Click(object sender, EventArgs e)
         {
             while (notificationTopics.SelectedIndex > -1)
             {
                 string topicUniqueString = (string)notificationTopics.Items[notificationTopics.SelectedIndex];
                 
-                _notificationListener.UnsubscribeFromTopic(topicUniqueString);
+                await _notificationListener.UnsubscribeFromTopicAsync(topicUniqueString);
                 notificationTopics.Items.Remove(topicUniqueString);
             }
 
