@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ntfysh_client
@@ -21,6 +14,21 @@ namespace ntfysh_client
         {
             return topicId.Text;
         }
+        
+        public string getServerUrl()
+        {
+            return serverUrl.Text;
+        }
+        
+        public string getUsername()
+        {
+            return username.Text;
+        }
+        
+        public string getPassword()
+        {
+            return password.Text;
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -29,6 +37,30 @@ namespace ntfysh_client
                 MessageBox.Show("You must specify a topic name.", "Topic name not specified", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.None;
                 topicId.Focus();
+                return;
+            }
+
+            if (serverUrl.Text.Length < 1)
+            {
+                MessageBox.Show("You must specify a server URL. The default is https://ntfy.sh", "Server URL not specified", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DialogResult = DialogResult.None;
+                serverUrl.Focus();
+                return;
+            }
+
+            if (username.Text.Length > 0 && password.Text.Length < 1)
+            {
+                MessageBox.Show("You must specify a password alongside the username", "Password not specified", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DialogResult = DialogResult.None;
+                password.Focus();
+                return;
+            }
+
+            if (password.Text.Length > 0 && username.Text.Length < 1)
+            {
+                MessageBox.Show("You must specify a username alongside the password", "Username not specified", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DialogResult = DialogResult.None;
+                username.Focus();
                 return;
             }
 
@@ -41,6 +73,33 @@ namespace ntfysh_client
         }
 
         private void topicId_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Enter)
+            {
+                button1.PerformClick();
+                e.SuppressKeyPress = true;
+            }
+        }
+        
+        private void serverUrl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Enter)
+            {
+                button1.PerformClick();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void username_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Enter)
+            {
+                button1.PerformClick();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void password_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyData == Keys.Enter)
             {

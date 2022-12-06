@@ -36,7 +36,7 @@ namespace ntfysh_client
 
                 if (result == DialogResult.OK)
                 {
-                    notificationListener.SubscribeToTopic(dialog.getTopicId());
+                    notificationListener.SubscribeToTopic(dialog.getTopicId(), dialog.getServerUrl(), dialog.getUsername(), dialog.getPassword());
                     notificationTopics.Items.Add(dialog.getTopicId());
                     this.SaveTopicsToFile();
                 }
@@ -117,7 +117,7 @@ namespace ntfysh_client
                 while (!reader.EndOfStream)
                 {
                     var topic = reader.ReadLine();
-                    notificationListener.SubscribeToTopic(topic);
+                    notificationListener.SubscribeToTopic(topic, "https://ntfy.sh", null, null);
                     notificationTopics.Items.Add(topic);
                 }
             }

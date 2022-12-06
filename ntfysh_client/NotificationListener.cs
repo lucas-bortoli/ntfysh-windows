@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace ntfysh_client
         
         private bool disposedValue;
 
-        public Dictionary<string, StreamReader> subscribedTopics;
+        public readonly Dictionary<string, SubscribedTopic> SubscribedTopics = new Dictionary<string, SubscribedTopic>();
 
         public delegate void NotificationReceiveHandler(object sender, NotificationReceiveEventArgs e);
         public event NotificationReceiveHandler OnNotificationReceive;
@@ -27,22 +28,32 @@ namespace ntfysh_client
         public NotificationListener()
         {
             httpClient = new HttpClient();
-            subscribedTopics = new Dictionary<string, StreamReader>();
 
             httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        public async Task SubscribeToTopic(string topicId)
+        public async Task SubscribeToTopic(string topicId, string serverUrl, string username, string password)
         {
-            HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, $"https://ntfy.sh/{HttpUtility.UrlEncode(topicId)}/json");
-            using (var response = await httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead))
+            if (string.IsNullOrWhiteSpace(username)) username = null;
+            if (string.IsNullOrWhiteSpace(password)) password = null;
+            
+            HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, $"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/json");
+
+            if (username != null && password != null)
             {
-                using (var body = await response.Content.ReadAsStreamAsync())
+                byte[] boundCredentialsBytes = Encoding.UTF8.GetBytes($"{username}:{password}");
+
+                msg.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(boundCredentialsBytes));
+            }
+
+            using (HttpResponseMessage response = await httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead))
+            {
+                using (Stream body = await response.Content.ReadAsStreamAsync())
                 {
                     using (StreamReader reader = new StreamReader(body))
                     {
-                        subscribedTopics.Add(topicId, reader);
+                        SubscribedTopics.Add(topicId, new SubscribedTopic(topicId, serverUrl, username, password, reader));
 
                         try
                         {
@@ -71,9 +82,9 @@ namespace ntfysh_client
 
                             // If the topic is still registered, then that stream wasn't mean to be closed (maybe network failure?)
                             // Restart it
-                            if (subscribedTopics.ContainsKey(topicId))
+                            if (SubscribedTopics.ContainsKey(topicId))
                             {
-                                SubscribeToTopic(topicId);
+                                SubscribeToTopic(topicId, serverUrl, username, password);
                             }
                         }
                     }
@@ -85,12 +96,12 @@ namespace ntfysh_client
         {
             Debug.WriteLine($"Removing topic {topicId}");
 
-            if (subscribedTopics.ContainsKey(topicId))
+            if (SubscribedTopics.ContainsKey(topicId))
             {
                 // Not moronic to store it in a variable; this solves a race condition in SubscribeToTopic
-                var topic = subscribedTopics[topicId];
-                subscribedTopics.Remove(topicId);
-                topic.Close();
+                var topic = SubscribedTopics[topicId];
+                SubscribedTopics.Remove(topicId);
+                topic.Stream.Close();
             }
         }
 

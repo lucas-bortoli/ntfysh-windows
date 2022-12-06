@@ -74,6 +74,7 @@
     <Compile Include="SubscribeDialog.Designer.cs">
       <DependentUpon>SubscribeDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="SubscribedTopic.cs" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>
