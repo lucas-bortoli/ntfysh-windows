@@ -212,5 +212,11 @@ namespace ntfysh_client
             using AboutBox d = new AboutBox();
             d.ShowDialog();
         }
+
+        private void exitToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            _trueExit = true;
+            Close();
+        }
     }
 }
