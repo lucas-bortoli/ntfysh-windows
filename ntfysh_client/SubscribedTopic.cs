@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Newtonsoft.Json;
 
 namespace ntfysh_client
 {
@@ -18,6 +19,7 @@ namespace ntfysh_client
         public string Username { get; }
         public string Password { get; }
 
+        [JsonIgnore]
         public StreamReader Stream { get; }
     }
 }

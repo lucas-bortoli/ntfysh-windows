@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace ntfysh_client
 {
@@ -94,32 +95,83 @@ namespace ntfysh_client
 
         private string GetTopicsFilePath()
         {
-            string binaryDirectory = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            return Path.Combine(binaryDirectory, "topics.txt");
+            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for topics file"), "topics.json");
+        }
+        
+        private string GetLegacyTopicsFilePath()
+        {
+            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for legacy topics file"), "topics.txt");
         }
 
         private void SaveTopicsToFile()
         {
-            using (StreamWriter writer = new StreamWriter(GetTopicsFilePath()))
-            {
-                foreach (string topic in notificationTopics.Items)
-                {
-                    writer.WriteLine(topic);
-                }
-            }
+            string topicsSerialised = JsonConvert.SerializeObject(notificationListener.SubscribedTopics.Select(st => st.Value).ToList(), Formatting.Indented);
+            
+            File.WriteAllText(GetTopicsFilePath(), topicsSerialised);
         }
 
         private void LoadTopics()
         {
-            if (!File.Exists(GetTopicsFilePath())) return;
-            using (StreamReader reader = new StreamReader(GetTopicsFilePath()))
+            string legacyTopicsPath = GetLegacyTopicsFilePath();
+            string topicsFilePath = GetTopicsFilePath();
+
+            //If we have an old format topics file. Convert it to the new format!
+            if (File.Exists(legacyTopicsPath))
             {
-                while (!reader.EndOfStream)
+                //Read old format
+                List<string> legacyTopics = new List<string>();
+                
+                using (StreamReader reader = new StreamReader(legacyTopicsPath))
                 {
-                    var topic = reader.ReadLine();
-                    notificationListener.SubscribeToTopic(topic, "https://ntfy.sh", null, null);
-                    notificationTopics.Items.Add(topic);
+                    while (!reader.EndOfStream)
+                    {
+                        string legacyTopic = reader.ReadLine();
+                        legacyTopics.Add(legacyTopic);
+                    }
                 }
+
+                //Assemble new format
+                List<SubscribedTopic> newTopics = legacyTopics.Select(lt => new SubscribedTopic(lt, "https://ntfy.sh", null, null, null)).ToList();
+
+                string newFormatSerialised = JsonConvert.SerializeObject(newTopics, Formatting.Indented);
+                
+                //Write new format
+                File.WriteAllText(topicsFilePath, newFormatSerialised);
+                
+                //Delete old format
+                File.Delete(legacyTopicsPath);
+            }
+            
+            //Check if we have any topics file on disk to load
+            if (!File.Exists(topicsFilePath)) return;
+            
+            //We have a topics file. Load it!
+            string topicsSerialised = File.ReadAllText(topicsFilePath);
+
+            //Check if the file is empty
+            if (string.IsNullOrWhiteSpace(topicsSerialised))
+            {
+                //The file is empty. May as well remove it and consider it nonexistent
+                File.Delete(topicsFilePath);
+                return;
+            }
+
+            //Deserialise the topics
+            List<SubscribedTopic> topics = JsonConvert.DeserializeObject<List<SubscribedTopic>>(topicsSerialised);
+
+            if (topics == null)
+            {
+                //TODO Deserialise error!
+                return;
+            }
+            
+            //Load them in
+            foreach (SubscribedTopic topic in topics)
+            {
+                notificationListener.SubscribeToTopic(topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                notificationTopics.Items.Add(topic.TopicId);
             }
         }
 
