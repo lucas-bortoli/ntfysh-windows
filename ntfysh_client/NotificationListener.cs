@@ -31,7 +31,7 @@ namespace ntfysh_client
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        private async Task ListenToTopicAsync(HttpRequestMessage message, CancellationToken cancellationToken)
+        private async Task ListenToTopicWithHttpLongJsonAsync(HttpRequestMessage message, CancellationToken cancellationToken)
         {
             if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
             
@@ -60,6 +60,59 @@ namespace ntfysh_client
                         
                         //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
 
+                        //Separate the partial line from the full lines
+                        int partialLineIndex = lines.Count - 1;
+                        string partialLine = lines[partialLineIndex];
+                        lines.RemoveAt(partialLineIndex);
+                        
+                        //Process the full lines
+                        foreach (string line in lines) ProcessMessage(line);
+                        
+                        //Write back the partial line
+                        mainBuffer.Clear();
+                        mainBuffer.Append(partialLine);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    #if DEBUG
+                        Debug.WriteLine(ex);
+                    #endif
+                    
+                    //Fall back to the outer loop to restart the listen, or cancel if requested
+                }
+            }
+        }
+        
+        private async Task ListenToTopicWithWebsocketAsync(Uri uri, NetworkCredential credentials, CancellationToken cancellationToken)
+        {
+            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
+            
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                using ClientWebSocket socket = new();
+                socket.Options.Credentials = credentials;
+                
+                try
+                {
+                    StringBuilder mainBuffer = new();
+                    
+                    await socket.ConnectAsync(uri, cancellationToken);
+                    
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Read as much as possible
+                        byte[] buffer = new byte[8192];
+                        WebSocketReceiveResult? result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                        
+                        //Append it to our main buffer
+                        mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                        
+                        List<string> lines = mainBuffer.ToString().Split('\n').ToList();
+                        //If we have not yet received a full line, meaning theres only 1 part, go back to reading
+                        if (lines.Count <= 1) continue;
+                        
+                        //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
                         //Separate the partial line from the full lines
                         int partialLineIndex = lines.Count - 1;
                         string partialLine = lines[partialLineIndex];
@@ -120,8 +173,23 @@ namespace ntfysh_client
             }
 
             CancellationTokenSource listenCanceller = new();
-            Task listenTask = ListenToTopicAsync(message, listenCanceller.Token);
+            Task listenTask = ListenToTopicWithHttpLongJsonAsync(message, listenCanceller.Token);
 
+            SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, listenTask, listenCanceller));
+        }
+        
+        public void SubscribeToTopicUsingWebsocket(string unique, string topicId, string serverUrl, string? username, string? password)
+        {
+            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
+            
+            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
+            
+            if (string.IsNullOrWhiteSpace(username)) username = null;
+            if (string.IsNullOrWhiteSpace(password)) password = null;
+            
+            Uri targetUri = new($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws");
+            CancellationTokenSource listenCanceller = new();
+            Task listenTask = ListenToTopicWithWebsocketAsync(targetUri, new NetworkCredential(username, password), listenCanceller.Token);
             SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, listenTask, listenCanceller));
         }
 

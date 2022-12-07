@@ -34,8 +34,15 @@ namespace ntfysh_client
             if (result != DialogResult.OK) return;
                 
             //Subscribe
-            _notificationListener.SubscribeToTopicUsingLongHttpJson(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password);
-                    
+            if (dialog.UseWebsockets)
+            {
+                _notificationListener.SubscribeToTopicUsingWebsocket(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password);
+            }
+            else
+            {
+                _notificationListener.SubscribeToTopicUsingLongHttpJson(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password);
+            }
+
             //Add to the user visible list
             notificationTopics.Items.Add(dialog.Unique);
                     
@@ -167,7 +174,24 @@ namespace ntfysh_client
             //Load them in
             foreach (SubscribedTopic topic in topics)
             {
-                _notificationListener.SubscribeToTopicUsingLongHttpJson($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                string[] parts = topic.ServerUrl.Split("://", 2);
+                
+                switch (parts[0].ToLower())
+                {
+                    case "ws":
+                    case "wss":
+                        _notificationListener.SubscribeToTopicUsingWebsocket($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                        break;
+                    
+                    case "http":
+                    case "https":
+                        _notificationListener.SubscribeToTopicUsingLongHttpJson($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                        break;
+                    
+                    default:
+                        continue;
+                }
+                
                 notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
         }
