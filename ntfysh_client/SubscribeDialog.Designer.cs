@@ -55,7 +55,7 @@ namespace ntfysh_client
             this.panel1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(346, 51);
-            this.panel1.TabIndex = 0;
+            this.panel1.TabIndex = 8;
             // 
             // button2
             // 
@@ -64,7 +64,7 @@ namespace ntfysh_client
             this.button2.Margin = new System.Windows.Forms.Padding(12, 12, 4, 12);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(88, 27);
-            this.button2.TabIndex = 1;
+            this.button2.TabIndex = 7;
             this.button2.Text = "Cancel";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
@@ -76,7 +76,7 @@ namespace ntfysh_client
             this.button1.Margin = new System.Windows.Forms.Padding(4, 12, 12, 12);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(88, 27);
-            this.button1.TabIndex = 2;
+            this.button1.TabIndex = 6;
             this.button1.Text = "Subscribe";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
@@ -99,7 +99,7 @@ namespace ntfysh_client
             this.topicId.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.topicId.Name = "topicId";
             this.topicId.Size = new System.Drawing.Size(318, 23);
-            this.topicId.TabIndex = 0;
+            this.topicId.TabIndex = 1;
             this.topicId.KeyDown += new System.Windows.Forms.KeyEventHandler(this.topicId_KeyDown);
             // 
             // serverUrl
@@ -132,7 +132,7 @@ namespace ntfysh_client
             this.username.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.username.Name = "username";
             this.username.Size = new System.Drawing.Size(318, 23);
-            this.username.TabIndex = 4;
+            this.username.TabIndex = 3;
             this.username.KeyDown += new System.Windows.Forms.KeyEventHandler(this.username_KeyDown);
             // 
             // label3
@@ -153,7 +153,7 @@ namespace ntfysh_client
             this.password.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.password.Name = "password";
             this.password.Size = new System.Drawing.Size(318, 23);
-            this.password.TabIndex = 6;
+            this.password.TabIndex = 4;
             this.password.UseSystemPasswordChar = true;
             this.password.KeyDown += new System.Windows.Forms.KeyEventHandler(this.password_KeyDown);
             // 
@@ -187,7 +187,7 @@ namespace ntfysh_client
             this.connectionType.Location = new System.Drawing.Point(14, 208);
             this.connectionType.Name = "connectionType";
             this.connectionType.Size = new System.Drawing.Size(318, 23);
-            this.connectionType.TabIndex = 10;
+            this.connectionType.TabIndex = 5;
             this.connectionType.TextChanged += new System.EventHandler(this.connectionType_TextChanged);
             // 
             // SubscribeDialog
