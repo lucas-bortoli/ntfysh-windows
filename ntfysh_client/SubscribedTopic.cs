@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -6,12 +7,18 @@ namespace ntfysh_client
 {
     public class SubscribedTopic
     {
-        public SubscribedTopic(string topicId, string serverUrl, string? username, string? password, Task runner, CancellationTokenSource runnerCanceller)
+        public SubscribedTopic(string topicId, string serverUrl, string? username, string? password)
         {
             TopicId = topicId;
             ServerUrl = serverUrl;
             Username = username;
             Password = password;
+        }
+
+        public void SetAssociatedRunner(Task runner, CancellationTokenSource runnerCanceller)
+        {
+            if (Runner is not null || RunnerCanceller is not null) throw new InvalidOperationException("Runner already associated");
+
             Runner = runner;
             RunnerCanceller = runnerCanceller;
         }
@@ -22,9 +29,9 @@ namespace ntfysh_client
         public string? Password { get; }
 
         [JsonIgnore]
-        public Task Runner { get; }
+        public Task? Runner { get; private set; }
         
         [JsonIgnore]
-        public CancellationTokenSource RunnerCanceller { get; }
+        public CancellationTokenSource? RunnerCanceller { get; private set; }
     }
 }

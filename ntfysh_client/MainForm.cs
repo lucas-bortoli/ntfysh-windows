@@ -19,8 +19,27 @@ namespace ntfysh_client
         {
             _notificationListener = notificationListener;
             _notificationListener.OnNotificationReceive += OnNotificationReceive;
+            _notificationListener.OnConnectionMultiAttemptFailure += OnConnectionMultiAttemptFailure;
+            _notificationListener.OnConnectionCredentialsFailure += OnConnectionCredentialsFailure;
             
             InitializeComponent();
+        }
+
+        private void OnNotificationReceive(object sender, NotificationReceiveEventArgs e)
+        {
+            notifyIcon.ShowBalloonTip(3000, e.Title, e.Message, ToolTipIcon.Info);
+        }
+
+        private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
+        {
+            MessageBox.Show($"Connecting to topic ID '{topic.TopicId}' on server '{topic.ServerUrl}' failed after multiple attempts.\n\nThis topic ID will be ignored and you will not receive notifications for it until you restart the application.", "Connection Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        
+        private void OnConnectionCredentialsFailure(NotificationListener sender, SubscribedTopic topic)
+        {
+            string reason = string.IsNullOrWhiteSpace(topic.Username) ? "credentials are required but were not provided" : "the entered credentials are incorrect";
+            
+            MessageBox.Show($"Connecting to topic ID '{topic.TopicId}' on server '{topic.ServerUrl}' failed because {reason}.\n\nThis topic ID will be ignored and you will not receive notifications for it until you correct the credentials.", "Connection Authentication Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void MainForm_Load(object sender, EventArgs e) => LoadTopics();
@@ -137,7 +156,7 @@ namespace ntfysh_client
                 }
 
                 //Assemble new format
-                List<SubscribedTopic> newTopics = legacyTopics.Select(lt => new SubscribedTopic(lt, "https://ntfy.sh", null, null, null, null)).ToList();
+                List<SubscribedTopic> newTopics = legacyTopics.Select(lt => new SubscribedTopic(lt, "https://ntfy.sh", null, null)).ToList();
 
                 string newFormatSerialised = JsonConvert.SerializeObject(newTopics, Formatting.Indented);
                 
@@ -194,11 +213,6 @@ namespace ntfysh_client
                 
                 notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
-        }
-
-        private void OnNotificationReceive(object sender, NotificationReceiveEventArgs e)
-        {
-            notifyIcon.ShowBalloonTip(3000, e.Title, e.Message, ToolTipIcon.Info);
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)

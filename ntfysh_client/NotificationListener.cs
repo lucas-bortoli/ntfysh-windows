@@ -15,124 +15,230 @@ using System.Web;
 
 namespace ntfysh_client
 {
-    public class NotificationListener : IDisposable
+    public class NotificationListener
     {
-        private readonly HttpClient _httpClient = new();
-        private bool _isDisposed;
-
         public readonly Dictionary<string, SubscribedTopic?> SubscribedTopicsByUnique = new();
 
-        public delegate void NotificationReceiveHandler(object sender, NotificationReceiveEventArgs e);
+        public delegate void NotificationReceiveHandler(NotificationListener sender, NotificationReceiveEventArgs e);
         public event NotificationReceiveHandler? OnNotificationReceive;
+        
+        public delegate void ConnectionErrorHandler(NotificationListener sender, SubscribedTopic topic);
+        public event ConnectionErrorHandler? OnConnectionMultiAttemptFailure;
+        public event ConnectionErrorHandler? OnConnectionCredentialsFailure;
 
         public NotificationListener()
         {
-            _httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        private async Task ListenToTopicWithHttpLongJsonAsync(HttpRequestMessage message, CancellationToken cancellationToken)
+        private async Task ListenToTopicWithHttpLongJsonAsync(HttpRequestMessage message, CancellationToken cancellationToken, SubscribedTopic topic)
         {
-            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
+            int connectionAttempts = 0;
             
             while (!cancellationToken.IsCancellationRequested)
             {
-                using HttpResponseMessage response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken);
-            
+                //See if we have exceeded maximum attempts
+                if (connectionAttempts >= 10)
+                {
+                    //10 connection failures (1 initial + 9 reattempts)! Do not retry
+                    OnConnectionMultiAttemptFailure?.Invoke(this, topic);
+                    return;
+                }
+                
                 try
                 {
-                    StringBuilder mainBuffer = new();
+                    //Establish connection
+                    using HttpClient client = new();
+                    client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite); //This will not prevent us from failing to connect, luckily
                     
+                    using HttpResponseMessage response = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    
+                    //Ensure successful connect
+                    response.EnsureSuccessStatusCode();
+
+                    //Reset connection attempts after a successful connect
+                    connectionAttempts = 0;
+
+                    //Begin listening
+                    StringBuilder mainBuffer = new();
+
                     while (!cancellationToken.IsCancellationRequested)
                     {
                         //Read as much as possible
                         byte[] buffer = new byte[8192];
                         int readBytes = await body.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
-                        
+
                         //Append it to our main buffer
                         mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, readBytes));
-                        
+
                         List<string> lines = mainBuffer.ToString().Split('\n').ToList();
 
                         //If we have not yet received a full line, meaning theres only 1 part, go back to reading
                         if (lines.Count <= 1) continue;
-                        
+
                         //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
 
                         //Separate the partial line from the full lines
                         int partialLineIndex = lines.Count - 1;
                         string partialLine = lines[partialLineIndex];
                         lines.RemoveAt(partialLineIndex);
-                        
+
                         //Process the full lines
                         foreach (string line in lines) ProcessMessage(line);
-                        
+
                         //Write back the partial line
                         mainBuffer.Clear();
                         mainBuffer.Append(partialLine);
                     }
                 }
-                catch (Exception ex)
+                catch (HttpRequestException hre)
                 {
+                    if (hre.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                    {
+                        //Our credentials either aren't present when they need to be or are invalid
+                        
+                        //Credential Failure! Do not retry
+                        OnConnectionCredentialsFailure?.Invoke(this, topic);
+                        return;
+                    }
+
                     #if DEBUG
-                        Debug.WriteLine(ex);
+                        Debug.WriteLine(hre);
                     #endif
                     
-                    //Fall back to the outer loop to restart the listen, or cancel if requested
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                catch (Exception e)
+                {
+                    #if DEBUG
+                        Debug.WriteLine(e);
+                    #endif
+
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                finally
+                {
+                    //We land here if we fail to connect or our connection gets closed (and if we are canceeling, but that gets ignored)
+                    
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Not cancelling, legitimate connection failure or termination
+
+                        if (connectionAttempts != 0)
+                        {
+                            //On our first reconnect attempt, try instantly. On consecutive, wait 3 seconds before each attempt
+                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                        }
+
+                        //Increment attempts
+                        connectionAttempts++;
+                        
+                        //Proceed to reattempt
+                    }
                 }
             }
         }
         
-        private async Task ListenToTopicWithWebsocketAsync(Uri uri, NetworkCredential credentials, CancellationToken cancellationToken)
+        private async Task ListenToTopicWithWebsocketAsync(Uri uri, NetworkCredential credentials, CancellationToken cancellationToken, SubscribedTopic topic)
         {
-            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
+            int connectionAttempts = 0;
             
             while (!cancellationToken.IsCancellationRequested)
             {
-                using ClientWebSocket socket = new();
-                socket.Options.Credentials = credentials;
-                
+                //See if we have exceeded maximum attempts
+                if (connectionAttempts >= 10)
+                {
+                    //10 connection failures (1 initial + 9 reattempts)! Do not retry
+                    OnConnectionMultiAttemptFailure?.Invoke(this, topic);
+                    return;
+                }
+
                 try
                 {
-                    StringBuilder mainBuffer = new();
+                    //Establish connection
+                    using ClientWebSocket socket = new();
+                    socket.Options.Credentials = credentials;
                     
                     await socket.ConnectAsync(uri, cancellationToken);
                     
+                    //Reset connection attempts after a successful connect
+                    connectionAttempts = 0;
+                    
+                    //Begin listening
+                    StringBuilder mainBuffer = new();
+
                     while (!cancellationToken.IsCancellationRequested)
                     {
                         //Read as much as possible
                         byte[] buffer = new byte[8192];
                         WebSocketReceiveResult? result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-                        
+
                         //Append it to our main buffer
                         mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                        
+
                         List<string> lines = mainBuffer.ToString().Split('\n').ToList();
                         //If we have not yet received a full line, meaning theres only 1 part, go back to reading
                         if (lines.Count <= 1) continue;
-                        
+
                         //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
                         //Separate the partial line from the full lines
                         int partialLineIndex = lines.Count - 1;
                         string partialLine = lines[partialLineIndex];
                         lines.RemoveAt(partialLineIndex);
-                        
+
                         //Process the full lines
                         foreach (string line in lines) ProcessMessage(line);
-                        
+
                         //Write back the partial line
                         mainBuffer.Clear();
                         mainBuffer.Append(partialLine);
                     }
                 }
-                catch (Exception ex)
+                catch (WebSocketException wse)
                 {
+                    if (wse.WebSocketErrorCode is WebSocketError.NotAWebSocket)
+                    {
+                        //We haven't achieved a connection with a websocket. TODO Seems ntfy doesn't report unauthorised properly, and responds 200
+                        
+                        //Credential Failure! Do not retry
+                        OnConnectionCredentialsFailure?.Invoke(this, topic);
+                        return;
+                    }
+                    
                     #if DEBUG
-                        Debug.WriteLine(ex);
+                        Debug.WriteLine(wse);
                     #endif
                     
-                    //Fall back to the outer loop to restart the listen, or cancel if requested
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                catch (Exception e)
+                {
+                    #if DEBUG
+                        Debug.WriteLine(e);
+                    #endif
+                    
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                finally
+                {
+                    //We land here if we fail to connect or our connection gets closed (and if we are canceeling, but that gets ignored)
+                    
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Not cancelling, legitimate connection failure or termination
+
+                        if (connectionAttempts != 0)
+                        {
+                            //On our first reconnect attempt, try instantly. On consecutive, wait 3 seconds before each attempt
+                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                        }
+
+                        //Increment attempts
+                        connectionAttempts++;
+                        
+                        //Proceed to reattempt
+                    }
                 }
             }
         }
@@ -156,8 +262,6 @@ namespace ntfysh_client
 
         public void SubscribeToTopicUsingLongHttpJson(string unique, string topicId, string serverUrl, string? username, string? password)
         {
-            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
-            
             if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
             
             if (string.IsNullOrWhiteSpace(username)) username = null;
@@ -172,31 +276,35 @@ namespace ntfysh_client
                 message.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(boundCredentialsBytes));
             }
 
-            CancellationTokenSource listenCanceller = new();
-            Task listenTask = ListenToTopicWithHttpLongJsonAsync(message, listenCanceller.Token);
+            SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
 
-            SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, listenTask, listenCanceller));
+            CancellationTokenSource listenCanceller = new();
+            Task listenTask = ListenToTopicWithHttpLongJsonAsync(message, listenCanceller.Token, newTopic);
+            
+            newTopic.SetAssociatedRunner(listenTask, listenCanceller);
+
+            SubscribedTopicsByUnique.Add(unique, newTopic);
         }
         
         public void SubscribeToTopicUsingWebsocket(string unique, string topicId, string serverUrl, string? username, string? password)
         {
-            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
-            
             if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
             
             if (string.IsNullOrWhiteSpace(username)) username = null;
             if (string.IsNullOrWhiteSpace(password)) password = null;
             
-            Uri targetUri = new($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws");
+            SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
+            
             CancellationTokenSource listenCanceller = new();
-            Task listenTask = ListenToTopicWithWebsocketAsync(targetUri, new NetworkCredential(username, password), listenCanceller.Token);
-            SubscribedTopicsByUnique.Add(unique, new SubscribedTopic(topicId, serverUrl, username, password, listenTask, listenCanceller));
+            Task listenTask = ListenToTopicWithWebsocketAsync(new Uri($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws"), new NetworkCredential(username, password), listenCanceller.Token, newTopic);
+            
+            newTopic.SetAssociatedRunner(listenTask, listenCanceller);
+            
+            SubscribedTopicsByUnique.Add(unique, newTopic);
         }
 
         public async Task UnsubscribeFromTopicAsync(string topicUniqueString)
         {
-            if (_isDisposed) throw new ObjectDisposedException(nameof(NotificationListener));
-                
             #if DEBUG
                 Debug.WriteLine($"Removing topic {topicUniqueString}");
             #endif
@@ -208,12 +316,12 @@ namespace ntfysh_client
             if (!SubscribedTopicsByUnique.TryGetValue(topicUniqueString, out topic!)) return;
             
             //Cancel and dispose the task runner
-            topic.RunnerCanceller.Cancel();
+            topic.RunnerCanceller?.Cancel();
 
             //Wait for the task runner to shut down
             try
             {
-                await topic.Runner;
+                if (topic.Runner is not null) await topic.Runner;
             }
             catch (Exception)
             {
@@ -221,19 +329,10 @@ namespace ntfysh_client
             }
 
             //Dispose task
-            topic.Runner.Dispose();
+            topic.Runner?.Dispose();
 
             //Remove the old topic
             SubscribedTopicsByUnique.Remove(topicUniqueString);
-        }
-
-        public void Dispose()
-        {
-            if (_isDisposed) return;
-            
-            _httpClient.Dispose();
-            
-            _isDisposed = true;
         }
     }
 }
