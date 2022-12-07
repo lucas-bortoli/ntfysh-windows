@@ -53,10 +53,10 @@ namespace ntfysh_client
             // subscribeNewTopic
             // 
             this.subscribeNewTopic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.subscribeNewTopic.Location = new System.Drawing.Point(275, 58);
+            this.subscribeNewTopic.Location = new System.Drawing.Point(211, 251);
             this.subscribeNewTopic.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.subscribeNewTopic.Name = "subscribeNewTopic";
-            this.subscribeNewTopic.Size = new System.Drawing.Size(122, 27);
+            this.subscribeNewTopic.Size = new System.Drawing.Size(188, 27);
             this.subscribeNewTopic.TabIndex = 2;
             this.subscribeNewTopic.Text = "Add";
             this.subscribeNewTopic.UseVisualStyleBackColor = true;
@@ -66,10 +66,10 @@ namespace ntfysh_client
             // 
             this.removeSelectedTopics.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.removeSelectedTopics.Enabled = false;
-            this.removeSelectedTopics.Location = new System.Drawing.Point(275, 91);
+            this.removeSelectedTopics.Location = new System.Drawing.Point(13, 251);
             this.removeSelectedTopics.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.removeSelectedTopics.Name = "removeSelectedTopics";
-            this.removeSelectedTopics.Size = new System.Drawing.Size(122, 27);
+            this.removeSelectedTopics.Size = new System.Drawing.Size(188, 27);
             this.removeSelectedTopics.TabIndex = 0;
             this.removeSelectedTopics.Text = "Remove selected";
             this.removeSelectedTopics.UseVisualStyleBackColor = true;
@@ -81,11 +81,11 @@ namespace ntfysh_client
             | System.Windows.Forms.AnchorStyles.Right)));
             this.notificationTopics.FormattingEnabled = true;
             this.notificationTopics.ItemHeight = 15;
-            this.notificationTopics.Location = new System.Drawing.Point(14, 58);
+            this.notificationTopics.Location = new System.Drawing.Point(13, 46);
             this.notificationTopics.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.notificationTopics.Name = "notificationTopics";
             this.notificationTopics.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.notificationTopics.Size = new System.Drawing.Size(168, 199);
+            this.notificationTopics.Size = new System.Drawing.Size(386, 199);
             this.notificationTopics.TabIndex = 3;
             this.notificationTopics.Click += new System.EventHandler(this.notificationTopics_Click);
             this.notificationTopics.SelectedValueChanged += new System.EventHandler(this.notificationTopics_SelectedValueChanged);
@@ -147,7 +147,7 @@ namespace ntfysh_client
             // 
             this.exitToolStripMenuItem1.Image = ((System.Drawing.Image)(resources.GetObject("exitToolStripMenuItem1.Image")));
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(93, 22);
             this.exitToolStripMenuItem1.Text = "Exit";
             this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem1_Click);
             // 
@@ -185,19 +185,19 @@ namespace ntfysh_client
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 39);
+            this.label1.Location = new System.Drawing.Point(13, 27);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(164, 15);
+            this.label1.Size = new System.Drawing.Size(170, 15);
             this.label1.TabIndex = 1;
-            this.label1.Text = "Subscribed notification topics";
+            this.label1.Text = "Subscribed Notification Topics:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(412, 272);
+            this.ClientSize = new System.Drawing.Size(412, 288);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.notificationTopics);
             this.Controls.Add(this.removeSelectedTopics);
