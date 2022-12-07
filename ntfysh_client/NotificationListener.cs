@@ -140,7 +140,7 @@ namespace ntfysh_client
             }
         }
         
-        private async Task ListenToTopicWithWebsocketAsync(Uri uri, NetworkCredential credentials, CancellationToken cancellationToken, SubscribedTopic topic)
+        private async Task ListenToTopicWithWebsocketAsync(Uri uri, string? credentials, CancellationToken cancellationToken, SubscribedTopic topic)
         {
             int connectionAttempts = 0;
             
@@ -158,8 +158,9 @@ namespace ntfysh_client
                 {
                     //Establish connection
                     using ClientWebSocket socket = new();
-                    socket.Options.Credentials = credentials;
-                    
+
+                    if (!string.IsNullOrWhiteSpace(credentials)) socket.Options.SetRequestHeader("Authorization", "Basic " + credentials);
+
                     await socket.ConnectAsync(uri, cancellationToken);
                     
                     //Reset connection attempts after a successful connect
@@ -269,7 +270,7 @@ namespace ntfysh_client
             
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, $"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/json");
 
-            if (username != null && password != null)
+            if (username is not null && password is not null)
             {
                 byte[] boundCredentialsBytes = Encoding.UTF8.GetBytes($"{username}:{password}");
 
@@ -294,9 +295,18 @@ namespace ntfysh_client
             if (string.IsNullOrWhiteSpace(password)) password = null;
             
             SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
+
+            string? credentials = null;
+            
+            if (username is not null && password is not null)
+            {
+                byte[] boundCredentialsBytes = Encoding.UTF8.GetBytes($"{username}:{password}");
+
+                credentials = Convert.ToBase64String(boundCredentialsBytes);
+            }
             
             CancellationTokenSource listenCanceller = new();
-            Task listenTask = ListenToTopicWithWebsocketAsync(new Uri($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws"), new NetworkCredential(username, password), listenCanceller.Token, newTopic);
+            Task listenTask = ListenToTopicWithWebsocketAsync(new Uri($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws"), credentials, listenCanceller.Token, newTopic);
             
             newTopic.SetAssociatedRunner(listenTask, listenCanceller);
             
