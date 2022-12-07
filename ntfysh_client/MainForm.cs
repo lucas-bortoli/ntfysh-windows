@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 
 namespace ntfysh_client
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private readonly NotificationListener _notificationListener;
         private bool _trueExit;
 
-        public Form1(NotificationListener notificationListener)
+        public MainForm(NotificationListener notificationListener)
         {
             _notificationListener = notificationListener;
             _notificationListener.OnNotificationReceive += OnNotificationReceive;
@@ -27,7 +23,7 @@ namespace ntfysh_client
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e) => LoadTopics();
+        private void MainForm_Load(object sender, EventArgs e) => LoadTopics();
 
         private void subscribeNewTopic_Click(object sender, EventArgs e)
         {
@@ -181,12 +177,12 @@ namespace ntfysh_client
             notifyIcon.ShowBalloonTip(3000, e.Title, e.Message, ToolTipIcon.Info);
         }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             notifyIcon.Dispose();
         }
         
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Let it close
             if (_trueExit) return;

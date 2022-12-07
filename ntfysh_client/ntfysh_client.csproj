@@ -7,14 +7,11 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ApplicationIcon>NotificationHub.ico</ApplicationIcon>
+    <StartupObject>ntfysh_client.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties" />
   </ItemGroup>
 
 </Project>
