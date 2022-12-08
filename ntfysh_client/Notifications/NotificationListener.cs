@@ -85,7 +85,7 @@ namespace ntfysh_client.Notifications
                         lines.RemoveAt(partialLineIndex);
 
                         //Process the full lines
-                        foreach (string line in lines) ProcessMessage(line);
+                        foreach (string line in lines) ProcessMessage(topic, line);
 
                         //Write back the partial line
                         mainBuffer.Clear();
@@ -189,7 +189,7 @@ namespace ntfysh_client.Notifications
                         lines.RemoveAt(partialLineIndex);
 
                         //Process the full lines
-                        foreach (string line in lines) ProcessMessage(line);
+                        foreach (string line in lines) ProcessMessage(topic, line);
 
                         //Write back the partial line
                         mainBuffer.Clear();
@@ -244,7 +244,7 @@ namespace ntfysh_client.Notifications
             }
         }
 
-        private void ProcessMessage(string message)
+        private void ProcessMessage(SubscribedTopic topic, string message)
         {
             #if DEBUG
                 Debug.WriteLine(message);
@@ -257,7 +257,7 @@ namespace ntfysh_client.Notifications
 
             if (evt.Event == "message")
             {
-                OnNotificationReceive?.Invoke(this, new NotificationReceiveEventArgs(evt.Title, evt.Message));
+                OnNotificationReceive?.Invoke(this, new NotificationReceiveEventArgs(topic, evt.Title ?? "", evt.Message, evt.Priority ?? NotificationPriority.Default));
             }
         }
 

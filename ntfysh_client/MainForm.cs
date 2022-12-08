@@ -54,7 +54,19 @@ namespace ntfysh_client
 
         private void OnNotificationReceive(object sender, NotificationReceiveEventArgs e)
         {
-            notifyIcon.ShowBalloonTip(3000, e.Title, e.Message, ToolTipIcon.Info);
+            ToolTipIcon priorityIcon = e.Priority switch
+            {
+                NotificationPriority.Max => ToolTipIcon.Error,
+                NotificationPriority.High => ToolTipIcon.Warning,
+                NotificationPriority.Default => ToolTipIcon.Info,
+                NotificationPriority.Low => ToolTipIcon.Info,
+                NotificationPriority.Min => ToolTipIcon.None,
+                _ => throw new ArgumentOutOfRangeException("Unknown priority received")
+            };
+
+            string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
+            
+            notifyIcon.ShowBalloonTip(5000, finalTitle, e.Message, priorityIcon);
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
