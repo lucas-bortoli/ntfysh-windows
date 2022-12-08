@@ -13,16 +13,42 @@ namespace ntfysh_client
     public partial class MainForm : Form
     {
         private readonly NotificationListener _notificationListener;
+        private bool _startInTray;
         private bool _trueExit;
 
-        public MainForm(NotificationListener notificationListener)
+        public MainForm(NotificationListener notificationListener, bool startInTray = false)
         {
             _notificationListener = notificationListener;
+            _startInTray = startInTray;
             _notificationListener.OnNotificationReceive += OnNotificationReceive;
             _notificationListener.OnConnectionMultiAttemptFailure += OnConnectionMultiAttemptFailure;
             _notificationListener.OnConnectionCredentialsFailure += OnConnectionCredentialsFailure;
             
             InitializeComponent();
+        }
+        
+        private void MainForm_Load(object sender, EventArgs e) => LoadTopics();
+        
+        protected override void SetVisibleCore(bool value)
+        {
+            if (_startInTray)
+            {
+                _startInTray = false;
+                
+                /*
+                 * TODO This little workaround prevents the window from appearing with a flash, but the taskbar icon appears for a moment.
+                 *
+                 * TODO This is because we must call SetVisibleCore(true) for the initial load events in the MainForm to fire, which is what triggers the listener
+                 */
+                Opacity = 0;
+                base.SetVisibleCore(true);
+                base.SetVisibleCore(false);
+                Opacity = 1;
+                
+                return;
+            }
+            
+            base.SetVisibleCore(value);
         }
 
         private void OnNotificationReceive(object sender, NotificationReceiveEventArgs e)
@@ -41,8 +67,6 @@ namespace ntfysh_client
             
             MessageBox.Show($"Connecting to topic ID '{topic.TopicId}' on server '{topic.ServerUrl}' failed because {reason}.\n\nThis topic ID will be ignored and you will not receive notifications for it until you correct the credentials.", "Connection Authentication Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-        private void MainForm_Load(object sender, EventArgs e) => LoadTopics();
 
         private void subscribeNewTopic_Click(object sender, EventArgs e)
         {
