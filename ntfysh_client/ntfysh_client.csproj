@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <ApplicationIcon>NotificationHub.ico</ApplicationIcon>
     <StartupObject>ntfysh_client.Program</StartupObject>
+    <AssemblyName>ntfy.sh</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
