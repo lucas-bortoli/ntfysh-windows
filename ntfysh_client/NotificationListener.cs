@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,142 +15,334 @@ using System.Web;
 
 namespace ntfysh_client
 {
-    class NotificationListener : IDisposable
+    public class NotificationListener
     {
-        private HttpClient httpClient;
+        public readonly Dictionary<string, SubscribedTopic?> SubscribedTopicsByUnique = new();
+
+        public delegate void NotificationReceiveHandler(NotificationListener sender, NotificationReceiveEventArgs e);
+        public event NotificationReceiveHandler? OnNotificationReceive;
         
-        private bool disposedValue;
-
-        public Dictionary<string, StreamReader> subscribedTopics;
-
-        public delegate void NotificationReceiveHandler(object sender, NotificationReceiveEventArgs e);
-        public event NotificationReceiveHandler OnNotificationReceive;
+        public delegate void ConnectionErrorHandler(NotificationListener sender, SubscribedTopic topic);
+        public event ConnectionErrorHandler? OnConnectionMultiAttemptFailure;
+        public event ConnectionErrorHandler? OnConnectionCredentialsFailure;
 
         public NotificationListener()
         {
-            httpClient = new HttpClient();
-            subscribedTopics = new Dictionary<string, StreamReader>();
-
-            httpClient.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        public async Task SubscribeToTopic(string topicId)
+        private async Task ListenToTopicWithHttpLongJsonAsync(HttpRequestMessage message, CancellationToken cancellationToken, SubscribedTopic topic)
         {
-            HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, $"https://ntfy.sh/{HttpUtility.UrlEncode(topicId)}/json");
-            using (var response = await httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead))
+            int connectionAttempts = 0;
+            
+            while (!cancellationToken.IsCancellationRequested)
             {
-                using (var body = await response.Content.ReadAsStreamAsync())
+                //See if we have exceeded maximum attempts
+                if (connectionAttempts >= 10)
                 {
-                    using (StreamReader reader = new StreamReader(body))
+                    //10 connection failures (1 initial + 9 reattempts)! Do not retry
+                    OnConnectionMultiAttemptFailure?.Invoke(this, topic);
+                    return;
+                }
+                
+                try
+                {
+                    //Establish connection
+                    using HttpClient client = new();
+                    client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite); //This will not prevent us from failing to connect, luckily
+                    
+                    using HttpResponseMessage response = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    
+                    //Ensure successful connect
+                    response.EnsureSuccessStatusCode();
+
+                    //Reset connection attempts after a successful connect
+                    connectionAttempts = 0;
+
+                    //Begin listening
+                    StringBuilder mainBuffer = new();
+
+                    while (!cancellationToken.IsCancellationRequested)
                     {
-                        subscribedTopics.Add(topicId, reader);
+                        //Read as much as possible
+                        byte[] buffer = new byte[8192];
+                        int readBytes = await body.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
 
-                        try
+                        //Append it to our main buffer
+                        mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, readBytes));
+
+                        List<string> lines = mainBuffer.ToString().Split('\n').ToList();
+
+                        //If we have not yet received a full line, meaning theres only 1 part, go back to reading
+                        if (lines.Count <= 1) continue;
+
+                        //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
+
+                        //Separate the partial line from the full lines
+                        int partialLineIndex = lines.Count - 1;
+                        string partialLine = lines[partialLineIndex];
+                        lines.RemoveAt(partialLineIndex);
+
+                        //Process the full lines
+                        foreach (string line in lines) ProcessMessage(line);
+
+                        //Write back the partial line
+                        mainBuffer.Clear();
+                        mainBuffer.Append(partialLine);
+                    }
+                }
+                catch (HttpRequestException hre)
+                {
+                    if (hre.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                    {
+                        //Our credentials either aren't present when they need to be or are invalid
+                        
+                        //Credential Failure! Do not retry
+                        OnConnectionCredentialsFailure?.Invoke(this, topic);
+                        return;
+                    }
+
+                    #if DEBUG
+                        Debug.WriteLine(hre);
+                    #endif
+                    
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                catch (Exception e)
+                {
+                    #if DEBUG
+                        Debug.WriteLine(e);
+                    #endif
+
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                finally
+                {
+                    //We land here if we fail to connect or our connection gets closed (and if we are canceeling, but that gets ignored)
+                    
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Not cancelling, legitimate connection failure or termination
+
+                        if (connectionAttempts != 0)
                         {
-                            // The loop will be broken when this stream is closed
-                            while (true)
-                            {
-                                var line = await reader.ReadLineAsync();
-
-                                Debug.WriteLine(line);
-
-                                NtfyEventObject nev = JsonConvert.DeserializeObject<NtfyEventObject>(line);
-
-                                if (nev.Event == "message")
-                                {
-                                    if (OnNotificationReceive != null)
-                                    {
-                                        var evArgs = new NotificationReceiveEventArgs(nev.Title, nev.Message);
-                                        OnNotificationReceive(this, evArgs);
-                                    }
-                                }
-                            }
+                            //On our first reconnect attempt, try instantly. On consecutive, wait 3 seconds before each attempt
+                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
                         }
-                        catch (Exception ex)
+
+                        //Increment attempts
+                        connectionAttempts++;
+                        
+                        //Proceed to reattempt
+                    }
+                }
+            }
+        }
+        
+        private async Task ListenToTopicWithWebsocketAsync(Uri uri, string? credentials, CancellationToken cancellationToken, SubscribedTopic topic)
+        {
+            int connectionAttempts = 0;
+            
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                //See if we have exceeded maximum attempts
+                if (connectionAttempts >= 10)
+                {
+                    //10 connection failures (1 initial + 9 reattempts)! Do not retry
+                    OnConnectionMultiAttemptFailure?.Invoke(this, topic);
+                    return;
+                }
+
+                try
+                {
+                    //Establish connection
+                    using ClientWebSocket socket = new();
+
+                    if (!string.IsNullOrWhiteSpace(credentials)) socket.Options.SetRequestHeader("Authorization", "Basic " + credentials);
+
+                    await socket.ConnectAsync(uri, cancellationToken);
+                    
+                    //Reset connection attempts after a successful connect
+                    connectionAttempts = 0;
+                    
+                    //Begin listening
+                    StringBuilder mainBuffer = new();
+
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Read as much as possible
+                        byte[] buffer = new byte[8192];
+                        WebSocketReceiveResult? result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+
+                        //Append it to our main buffer
+                        mainBuffer.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
+
+                        List<string> lines = mainBuffer.ToString().Split('\n').ToList();
+                        //If we have not yet received a full line, meaning theres only 1 part, go back to reading
+                        if (lines.Count <= 1) continue;
+
+                        //We now have at least 1 line! Count how many full lines. There will always be a partial line at the end, even if that partial line is empty
+                        //Separate the partial line from the full lines
+                        int partialLineIndex = lines.Count - 1;
+                        string partialLine = lines[partialLineIndex];
+                        lines.RemoveAt(partialLineIndex);
+
+                        //Process the full lines
+                        foreach (string line in lines) ProcessMessage(line);
+
+                        //Write back the partial line
+                        mainBuffer.Clear();
+                        mainBuffer.Append(partialLine);
+                    }
+                }
+                catch (WebSocketException wse)
+                {
+                    if (wse.WebSocketErrorCode is WebSocketError.NotAWebSocket)
+                    {
+                        //We haven't achieved a connection with a websocket. TODO Seems ntfy doesn't report unauthorised properly, and responds 200
+                        
+                        //Credential Failure! Do not retry
+                        OnConnectionCredentialsFailure?.Invoke(this, topic);
+                        return;
+                    }
+                    
+                    #if DEBUG
+                        Debug.WriteLine(wse);
+                    #endif
+                    
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                catch (Exception e)
+                {
+                    #if DEBUG
+                        Debug.WriteLine(e);
+                    #endif
+                    
+                    //We will not hit the finally block which will increment the connection failure counter and attempt a reconnect if applicable
+                }
+                finally
+                {
+                    //We land here if we fail to connect or our connection gets closed (and if we are canceeling, but that gets ignored)
+                    
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        //Not cancelling, legitimate connection failure or termination
+
+                        if (connectionAttempts != 0)
                         {
-                            Debug.WriteLine(ex);
-
-                            // If the topic is still registered, then that stream wasn't mean to be closed (maybe network failure?)
-                            // Restart it
-                            if (subscribedTopics.ContainsKey(topicId))
-                            {
-                                SubscribeToTopic(topicId);
-                            }
+                            //On our first reconnect attempt, try instantly. On consecutive, wait 3 seconds before each attempt
+                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
                         }
+
+                        //Increment attempts
+                        connectionAttempts++;
+                        
+                        //Proceed to reattempt
                     }
                 }
             }
         }
 
-        public void RemoveTopic(string topicId)
+        private void ProcessMessage(string message)
         {
-            Debug.WriteLine($"Removing topic {topicId}");
+            #if DEBUG
+                Debug.WriteLine(message);
+            #endif
 
-            if (subscribedTopics.ContainsKey(topicId))
+            NtfyEvent? evt = JsonConvert.DeserializeObject<NtfyEvent>(message);
+                    
+            //If we hit this, ntfy sent us an invalid message
+            if (evt is null) return;
+
+            if (evt.Event == "message")
             {
-                // Not moronic to store it in a variable; this solves a race condition in SubscribeToTopic
-                var topic = subscribedTopics[topicId];
-                subscribedTopics.Remove(topicId);
-                topic.Close();
+                OnNotificationReceive?.Invoke(this, new NotificationReceiveEventArgs(evt.Title, evt.Message));
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        public void SubscribeToTopicUsingLongHttpJson(string unique, string topicId, string serverUrl, string? username, string? password)
         {
-            if (!disposedValue)
+            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
+            
+            if (string.IsNullOrWhiteSpace(username)) username = null;
+            if (string.IsNullOrWhiteSpace(password)) password = null;
+            
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, $"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/json");
+
+            if (username is not null && password is not null)
             {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                }
+                byte[] boundCredentialsBytes = Encoding.UTF8.GetBytes($"{username}:{password}");
 
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
+                message.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(boundCredentialsBytes));
             }
+
+            SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
+
+            CancellationTokenSource listenCanceller = new();
+            Task listenTask = ListenToTopicWithHttpLongJsonAsync(message, listenCanceller.Token, newTopic);
+            
+            newTopic.SetAssociatedRunner(listenTask, listenCanceller);
+
+            SubscribedTopicsByUnique.Add(unique, newTopic);
         }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~NotificationListener()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
+        
+        public void SubscribeToTopicUsingWebsocket(string unique, string topicId, string serverUrl, string? username, string? password)
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
+            
+            if (string.IsNullOrWhiteSpace(username)) username = null;
+            if (string.IsNullOrWhiteSpace(password)) password = null;
+            
+            SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
+
+            string? credentials = null;
+            
+            if (username is not null && password is not null)
+            {
+                byte[] boundCredentialsBytes = Encoding.UTF8.GetBytes($"{username}:{password}");
+
+                credentials = Convert.ToBase64String(boundCredentialsBytes);
+            }
+            
+            CancellationTokenSource listenCanceller = new();
+            Task listenTask = ListenToTopicWithWebsocketAsync(new Uri($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws"), credentials, listenCanceller.Token, newTopic);
+            
+            newTopic.SetAssociatedRunner(listenTask, listenCanceller);
+            
+            SubscribedTopicsByUnique.Add(unique, newTopic);
         }
-    }
 
-    public class NotificationReceiveEventArgs : EventArgs
-    {
-        public string Title { get; private set; }
-        public string Message { get; private set; }
-
-        public NotificationReceiveEventArgs(string title, string message)
+        public async Task UnsubscribeFromTopicAsync(string topicUniqueString)
         {
-            Title = title;
-            Message = message;
-        }
-    }
+            #if DEBUG
+                Debug.WriteLine($"Removing topic {topicUniqueString}");
+            #endif
+            
+            // ReSharper disable once InlineOutVariableDeclaration - Needed to avoid nullable warning
+            SubscribedTopic topic;
 
-    public class NtfyEventObject
-    {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-        [JsonProperty("time")]
-        public Int64 Time { get; set; }
-        [JsonProperty("event")]
-        public string Event { get; set; }
-        [JsonProperty("topic")]
-        public string Topic { get; set; }
-        [JsonProperty("message")]
-        public string Message { get; set; }
-        [JsonProperty("title")]
-        public string Title { get; set; }
+            //Topic isn't even subscribed, ignore
+            if (!SubscribedTopicsByUnique.TryGetValue(topicUniqueString, out topic!)) return;
+            
+            //Cancel and dispose the task runner
+            topic.RunnerCanceller?.Cancel();
+
+            //Wait for the task runner to shut down
+            try
+            {
+                if (topic.Runner is not null) await topic.Runner;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            //Dispose task
+            topic.Runner?.Dispose();
+
+            //Remove the old topic
+            SubscribedTopicsByUnique.Remove(topicUniqueString);
+        }
     }
 }
