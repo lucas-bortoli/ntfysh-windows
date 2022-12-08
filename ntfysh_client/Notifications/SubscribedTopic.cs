@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace ntfysh_client
+namespace ntfysh_client.Notifications
 {
     public class SubscribedTopic
     {

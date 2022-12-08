@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using ntfysh_client.Notifications;
 
 namespace ntfysh_client
 {

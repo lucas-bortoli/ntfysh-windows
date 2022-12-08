@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace ntfysh_client
+namespace ntfysh_client.Notifications
 {
     public class NtfyEvent
     {

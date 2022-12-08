@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using ntfysh_client.Notifications;
 
 namespace ntfysh_client
 {
