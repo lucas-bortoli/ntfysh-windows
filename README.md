@@ -8,6 +8,7 @@ It is capable of receiving notifications from multiple ntfy.sh servers simultane
 ### Main Application
 ![Application screenshot](https://user-images.githubusercontent.com/33007665/206556170-962fd699-988c-477e-941e-5179b9f4a67c.png)
 ![Topic Subscribe screenshot](https://user-images.githubusercontent.com/33007665/206556398-5ee95cee-6fc8-4234-b46e-6380cdfc94dd.png)
+![Settings screenshot](https://user-images.githubusercontent.com/33007665/207159693-40542c12-1669-4f32-b1c6-4a8542ac1539.png)
 
 ### Example Notifications
 ![Default toast](https://user-images.githubusercontent.com/33007665/206558550-9903b9e3-7f6b-418d-8a46-1311708b5b3e.png)
