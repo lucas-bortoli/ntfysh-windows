@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace ntfysh_client
+namespace ntfysh_client.Notifications
 {
     public class NtfyEvent
     {
@@ -20,6 +20,9 @@ namespace ntfysh_client
         public string Message { get; set; } = null!;
 
         [JsonProperty("title")]
-        public string Title { get; set; } = null!;
+        public string? Title { get; set; }
+        
+        [JsonProperty("priority")]
+        public NotificationPriority? Priority { get; set; }
     }
 }

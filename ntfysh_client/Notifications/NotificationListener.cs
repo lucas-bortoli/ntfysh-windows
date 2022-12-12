@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,8 +11,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Newtonsoft.Json;
 
-namespace ntfysh_client
+namespace ntfysh_client.Notifications
 {
     public class NotificationListener
     {
@@ -85,7 +85,7 @@ namespace ntfysh_client
                         lines.RemoveAt(partialLineIndex);
 
                         //Process the full lines
-                        foreach (string line in lines) ProcessMessage(line);
+                        foreach (string line in lines) ProcessMessage(topic, line);
 
                         //Write back the partial line
                         mainBuffer.Clear();
@@ -189,7 +189,7 @@ namespace ntfysh_client
                         lines.RemoveAt(partialLineIndex);
 
                         //Process the full lines
-                        foreach (string line in lines) ProcessMessage(line);
+                        foreach (string line in lines) ProcessMessage(topic, line);
 
                         //Write back the partial line
                         mainBuffer.Clear();
@@ -244,7 +244,7 @@ namespace ntfysh_client
             }
         }
 
-        private void ProcessMessage(string message)
+        private void ProcessMessage(SubscribedTopic topic, string message)
         {
             #if DEBUG
                 Debug.WriteLine(message);
@@ -257,7 +257,7 @@ namespace ntfysh_client
 
             if (evt.Event == "message")
             {
-                OnNotificationReceive?.Invoke(this, new NotificationReceiveEventArgs(evt.Title, evt.Message));
+                OnNotificationReceive?.Invoke(this, new NotificationReceiveEventArgs(topic, evt.Title ?? "", evt.Message, evt.Priority ?? NotificationPriority.Default));
             }
         }
 

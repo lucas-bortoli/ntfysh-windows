@@ -57,24 +57,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="richTextBox2.Text" xml:space="preserve">
-    <value>ntfy.sh Windows by Lucas Bortoli and Contributors
-
-ntfy.sh Windows is a small lightweight push notification client for notifications sent via https://ntfy.sh compatible servers.
-
-It is capable of receiving notifications from multiple ntfy.sh servers simultaneously via Websocket or HTTP and supports both unauthenticated and authenticated topics.
-
-Get the latest release and keep track of updates via GitHub at https://github.com/lucas-bortoli/ntfysh-windows</value>
-  </data>
-  <data name="richTextBox1.Text" xml:space="preserve">
-    <value>Copyright © 2022 Lucas Bortoli
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-The icons included in this application are property of Microsoft Corporation (Visual Studio Image Library)</value>
-  </data>
 </root>

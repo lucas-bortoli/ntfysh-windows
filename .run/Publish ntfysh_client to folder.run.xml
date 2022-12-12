@@ -1,0 +1,6 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Publish ntfysh_client to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
+    <riderPublish configuration="Release" delete_existing_files="true" platform="Any CPU" runtime="win-x86" target_folder="./bin/Publish/net6.0-windows" target_framework="net6.0-windows" uuid_high="6492169016564532222" uuid_low="-5168761336838336273" />
+    <method v="2" />
+  </configuration>
+</component>

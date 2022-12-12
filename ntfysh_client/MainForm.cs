@@ -7,27 +7,70 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using ntfysh_client.Notifications;
 
 namespace ntfysh_client
 {
     public partial class MainForm : Form
     {
         private readonly NotificationListener _notificationListener;
+        private bool _startInTray;
         private bool _trueExit;
 
-        public MainForm(NotificationListener notificationListener)
+        public MainForm(NotificationListener notificationListener, bool startInTray = false)
         {
             _notificationListener = notificationListener;
+            _startInTray = startInTray;
             _notificationListener.OnNotificationReceive += OnNotificationReceive;
             _notificationListener.OnConnectionMultiAttemptFailure += OnConnectionMultiAttemptFailure;
             _notificationListener.OnConnectionCredentialsFailure += OnConnectionCredentialsFailure;
             
             InitializeComponent();
         }
+        
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            LoadSettings();
+            LoadTopics();
+        }
+
+        protected override void SetVisibleCore(bool value)
+        {
+            if (_startInTray)
+            {
+                _startInTray = false;
+                
+                /*
+                 * TODO This little workaround prevents the window from appearing with a flash, but the taskbar icon appears for a moment.
+                 *
+                 * TODO This is because we must call SetVisibleCore(true) for the initial load events in the MainForm to fire, which is what triggers the listener
+                 */
+                Opacity = 0;
+                base.SetVisibleCore(true);
+                base.SetVisibleCore(false);
+                Opacity = 1;
+                
+                return;
+            }
+            
+            base.SetVisibleCore(value);
+        }
 
         private void OnNotificationReceive(object sender, NotificationReceiveEventArgs e)
         {
-            notifyIcon.ShowBalloonTip(3000, e.Title, e.Message, ToolTipIcon.Info);
+            ToolTipIcon priorityIcon = e.Priority switch
+            {
+                NotificationPriority.Max => ToolTipIcon.Error,
+                NotificationPriority.High => ToolTipIcon.Warning,
+                NotificationPriority.Default => ToolTipIcon.Info,
+                NotificationPriority.Low => ToolTipIcon.Info,
+                NotificationPriority.Min => ToolTipIcon.None,
+                _ => throw new ArgumentOutOfRangeException("Unknown priority received")
+            };
+
+            string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
+            
+            notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
@@ -41,8 +84,6 @@ namespace ntfysh_client
             
             MessageBox.Show($"Connecting to topic ID '{topic.TopicId}' on server '{topic.ServerUrl}' failed because {reason}.\n\nThis topic ID will be ignored and you will not receive notifications for it until you correct the credentials.", "Connection Authentication Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-        private void MainForm_Load(object sender, EventArgs e) => LoadTopics();
 
         private void subscribeNewTopic_Click(object sender, EventArgs e)
         {
@@ -81,6 +122,26 @@ namespace ntfysh_client
 
             SaveTopicsToFile();
         }
+        
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using SettingsDialog dialog = new();
+
+            //Load current settings into dialog
+            dialog.Timeout = Program.Settings.Timeout;
+            
+            //Show dialog
+            DialogResult result = dialog.ShowDialog();
+
+            //Do not save on cancelled dialog
+            if (result != DialogResult.OK) return;
+
+            //Read new settings from dialog
+            Program.Settings.Timeout = dialog.Timeout;
+            
+            //Save new settings persistently
+            SaveSettingsToFile();
+        }
 
         private void notificationTopics_SelectedValueChanged(object sender, EventArgs e)
         {
@@ -93,11 +154,6 @@ namespace ntfysh_client
             int clickedItemIndex = notificationTopics.IndexFromPoint(new Point(ev.X, ev.Y));
 
             if (clickedItemIndex == -1) notificationTopics.ClearSelected();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Visible = false;
         }
 
         private void notifyIcon_Click(object sender, EventArgs e)
@@ -133,6 +189,19 @@ namespace ntfysh_client
             string topicsSerialised = JsonConvert.SerializeObject(_notificationListener.SubscribedTopicsByUnique.Select(st => st.Value).ToList(), Formatting.Indented);
             
             File.WriteAllText(GetTopicsFilePath(), topicsSerialised);
+        }
+        
+        private string GetSettingsFilePath()
+        {
+            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
+            return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for settings file"), "settings.json");
+        }
+        
+        private void SaveSettingsToFile()
+        {
+            string settingsSerialised = JsonConvert.SerializeObject(Program.Settings, Formatting.Indented);
+            
+            File.WriteAllText(GetSettingsFilePath(), settingsSerialised);
         }
 
         private void LoadTopics()
@@ -213,6 +282,54 @@ namespace ntfysh_client
                 
                 notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
+        }
+
+        private SettingsModel GetDefaultSettings() => new()
+        {
+            Timeout = 5
+        };
+
+        private void LoadSettings()
+        {
+            string settingsFilePath = GetSettingsFilePath();
+            
+            //Check if we have any settings file on disk to load. If we don't, initialise defaults
+            if (!File.Exists(settingsFilePath))
+            {
+                Program.Settings = GetDefaultSettings();
+                
+                SaveSettingsToFile();
+
+                return;
+            }
+
+            //We have a settings file. Load it!
+            string settingsSerialised = File.ReadAllText(settingsFilePath);
+
+            //Check if the file is empty. If it is, initialise default settings
+            if (string.IsNullOrWhiteSpace(settingsSerialised))
+            {
+                Program.Settings = GetDefaultSettings();
+                
+                SaveSettingsToFile();
+
+                return;
+            }
+
+            //Deserialise the settings
+            SettingsModel? settings = JsonConvert.DeserializeObject<SettingsModel?>(settingsSerialised);
+
+            //Check if the deserialise succeeded. If it didn't, initialise default settings
+            if (settings is null)
+            {
+                Program.Settings = GetDefaultSettings();
+                
+                SaveSettingsToFile();
+
+                return;
+            }
+
+            Program.Settings = settings;
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
