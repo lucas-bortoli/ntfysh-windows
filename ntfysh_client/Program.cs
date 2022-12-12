@@ -11,7 +11,8 @@ namespace ntfysh_client
     static class Program
     {
         private static readonly NotificationListener NotificationListener = new();
-        
+        public static SettingsModel Settings { get; set; } = null!;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>

@@ -28,8 +28,12 @@ namespace ntfysh_client
             InitializeComponent();
         }
         
-        private void MainForm_Load(object sender, EventArgs e) => LoadTopics();
-        
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            LoadSettings();
+            LoadTopics();
+        }
+
         protected override void SetVisibleCore(bool value)
         {
             if (_startInTray)
@@ -66,7 +70,7 @@ namespace ntfysh_client
 
             string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
             
-            notifyIcon.ShowBalloonTip(5000, finalTitle, e.Message, priorityIcon);
+            notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
@@ -118,6 +122,26 @@ namespace ntfysh_client
 
             SaveTopicsToFile();
         }
+        
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using SettingsDialog dialog = new();
+
+            //Load current settings into dialog
+            dialog.Timeout = Program.Settings.Timeout;
+            
+            //Show dialog
+            DialogResult result = dialog.ShowDialog();
+
+            //Do not save on cancelled dialog
+            if (result != DialogResult.OK) return;
+
+            //Read new settings from dialog
+            Program.Settings.Timeout = dialog.Timeout;
+            
+            //Save new settings persistently
+            SaveSettingsToFile();
+        }
 
         private void notificationTopics_SelectedValueChanged(object sender, EventArgs e)
         {
@@ -130,11 +154,6 @@ namespace ntfysh_client
             int clickedItemIndex = notificationTopics.IndexFromPoint(new Point(ev.X, ev.Y));
 
             if (clickedItemIndex == -1) notificationTopics.ClearSelected();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Visible = false;
         }
 
         private void notifyIcon_Click(object sender, EventArgs e)
@@ -170,6 +189,19 @@ namespace ntfysh_client
             string topicsSerialised = JsonConvert.SerializeObject(_notificationListener.SubscribedTopicsByUnique.Select(st => st.Value).ToList(), Formatting.Indented);
             
             File.WriteAllText(GetTopicsFilePath(), topicsSerialised);
+        }
+        
+        private string GetSettingsFilePath()
+        {
+            string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
+            return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for settings file"), "settings.json");
+        }
+        
+        private void SaveSettingsToFile()
+        {
+            string settingsSerialised = JsonConvert.SerializeObject(Program.Settings, Formatting.Indented);
+            
+            File.WriteAllText(GetSettingsFilePath(), settingsSerialised);
         }
 
         private void LoadTopics()
@@ -250,6 +282,54 @@ namespace ntfysh_client
                 
                 notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
+        }
+
+        private SettingsModel GetDefaultSettings() => new()
+        {
+            Timeout = 5
+        };
+
+        private void LoadSettings()
+        {
+            string settingsFilePath = GetSettingsFilePath();
+            
+            //Check if we have any settings file on disk to load. If we don't, initialise defaults
+            if (!File.Exists(settingsFilePath))
+            {
+                Program.Settings = GetDefaultSettings();
+                
+                SaveSettingsToFile();
+
+                return;
+            }
+
+            //We have a settings file. Load it!
+            string settingsSerialised = File.ReadAllText(settingsFilePath);
+
+            //Check if the file is empty. If it is, initialise default settings
+            if (string.IsNullOrWhiteSpace(settingsSerialised))
+            {
+                Program.Settings = GetDefaultSettings();
+                
+                SaveSettingsToFile();
+
+                return;
+            }
+
+            //Deserialise the settings
+            SettingsModel? settings = JsonConvert.DeserializeObject<SettingsModel?>(settingsSerialised);
+
+            //Check if the deserialise succeeded. If it didn't, initialise default settings
+            if (settings is null)
+            {
+                Program.Settings = GetDefaultSettings();
+                
+                SaveSettingsToFile();
+
+                return;
+            }
+
+            Program.Settings = settings;
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
