@@ -31,16 +31,16 @@ namespace ntfysh_client.Notifications
             ServicePointManager.DefaultConnectionLimit = 100;
         }
 
-        private async Task ListenToTopicWithHttpLongJsonAsync(HttpRequestMessage message, CancellationToken cancellationToken, SubscribedTopic topic)
+        private async Task ListenToTopicWithHttpLongJsonAsync(HttpRequestMessage message, SubscribedTopic topic, int reconnectAttempts = 10, int reconnectAttemptDelay = 3, CancellationToken cancellationToken = default)
         {
             int connectionAttempts = 0;
             
             while (!cancellationToken.IsCancellationRequested)
             {
                 //See if we have exceeded maximum attempts
-                if (connectionAttempts >= 10)
+                if (reconnectAttempts != 0 && connectionAttempts >= reconnectAttempts)
                 {
-                    //10 connection failures (1 initial + 9 reattempts)! Do not retry
+                    //<reconnectAttempts> connection failures (1 initial + (<reconnectAttempts> - 1) reattempts)! Do not retry
                     OnConnectionMultiAttemptFailure?.Invoke(this, topic);
                     return;
                 }
@@ -119,16 +119,16 @@ namespace ntfysh_client.Notifications
                 }
                 finally
                 {
-                    //We land here if we fail to connect or our connection gets closed (and if we are canceeling, but that gets ignored)
+                    //We land here if we fail to connect or our connection gets closed (and if we are canceling, but that gets ignored)
                     
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         //Not cancelling, legitimate connection failure or termination
 
-                        if (connectionAttempts != 0)
+                        if (reconnectAttempts == 0 || connectionAttempts != 0)
                         {
-                            //On our first reconnect attempt, try instantly. On consecutive, wait 3 seconds before each attempt
-                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                            //On our first reconnect attempt, try instantly (unless we have infinite retries). On consecutive, wait <reconnectAttemptDelay> seconds before each attempt
+                            await Task.Delay(TimeSpan.FromSeconds(reconnectAttemptDelay), cancellationToken);
                         }
 
                         //Increment attempts
@@ -140,16 +140,16 @@ namespace ntfysh_client.Notifications
             }
         }
         
-        private async Task ListenToTopicWithWebsocketAsync(Uri uri, string? credentials, CancellationToken cancellationToken, SubscribedTopic topic)
+        private async Task ListenToTopicWithWebsocketAsync(Uri uri, string? credentials, SubscribedTopic topic, int reconnectAttempts = 10, int reconnectAttemptDelay = 3, CancellationToken cancellationToken = default)
         {
             int connectionAttempts = 0;
             
             while (!cancellationToken.IsCancellationRequested)
             {
                 //See if we have exceeded maximum attempts
-                if (connectionAttempts >= 10)
+                if (reconnectAttempts != 0 && connectionAttempts >= reconnectAttempts)
                 {
-                    //10 connection failures (1 initial + 9 reattempts)! Do not retry
+                    //<reconnectAttempts> connection failures (1 initial + (<reconnectAttempts> - 1) reattempts)! Do not retry
                     OnConnectionMultiAttemptFailure?.Invoke(this, topic);
                     return;
                 }
@@ -223,16 +223,16 @@ namespace ntfysh_client.Notifications
                 }
                 finally
                 {
-                    //We land here if we fail to connect or our connection gets closed (and if we are canceeling, but that gets ignored)
+                    //We land here if we fail to connect or our connection gets closed (and if we are canceling, but that gets ignored)
                     
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         //Not cancelling, legitimate connection failure or termination
 
-                        if (connectionAttempts != 0)
+                        if (reconnectAttempts == 0 || connectionAttempts != 0)
                         {
-                            //On our first reconnect attempt, try instantly. On consecutive, wait 3 seconds before each attempt
-                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                            //On our first reconnect attempt, try instantly (unless we have infinite retries). On consecutive, wait <reconnectAttemptDelay> seconds before each attempt
+                            await Task.Delay(TimeSpan.FromSeconds(reconnectAttemptDelay), cancellationToken);
                         }
 
                         //Increment attempts
@@ -261,12 +261,15 @@ namespace ntfysh_client.Notifications
             }
         }
 
-        public void SubscribeToTopicUsingLongHttpJson(string unique, string topicId, string serverUrl, string? username, string? password)
+        public void SubscribeToTopicUsingLongHttpJson(string unique, string topicId, string serverUrl, string? username, string? password, int reconnectAttempts, int reconnectAttemptDelay)
         {
-            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
+            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new ArgumentException("A topic with this unique already exists", nameof(unique));
             
             if (string.IsNullOrWhiteSpace(username)) username = null;
             if (string.IsNullOrWhiteSpace(password)) password = null;
+            
+            if (reconnectAttempts < 0) throw new ArgumentException("Reconnect attempts must be 0 or more", nameof(reconnectAttempts));
+            if (reconnectAttemptDelay < 0) throw new ArgumentException("Reconnect attempt delay; must be 0 or more", nameof(reconnectAttemptDelay));
             
             HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, $"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/json");
 
@@ -280,19 +283,22 @@ namespace ntfysh_client.Notifications
             SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
 
             CancellationTokenSource listenCanceller = new();
-            Task listenTask = ListenToTopicWithHttpLongJsonAsync(message, listenCanceller.Token, newTopic);
+            Task listenTask = ListenToTopicWithHttpLongJsonAsync(message, newTopic, reconnectAttempts, reconnectAttemptDelay, listenCanceller.Token);
             
             newTopic.SetAssociatedRunner(listenTask, listenCanceller);
 
             SubscribedTopicsByUnique.Add(unique, newTopic);
         }
         
-        public void SubscribeToTopicUsingWebsocket(string unique, string topicId, string serverUrl, string? username, string? password)
+        public void SubscribeToTopicUsingWebsocket(string unique, string topicId, string serverUrl, string? username, string? password, int reconnectAttempts, int reconnectAttemptDelay)
         {
-            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new InvalidOperationException("A topic with this unique already exists");
+            if (SubscribedTopicsByUnique.ContainsKey(unique)) throw new ArgumentException("A topic with this unique already exists", nameof(unique));
             
             if (string.IsNullOrWhiteSpace(username)) username = null;
             if (string.IsNullOrWhiteSpace(password)) password = null;
+            
+            if (reconnectAttempts < 0) throw new ArgumentException("Reconnect attempts must be 0 or more", nameof(reconnectAttempts));
+            if (reconnectAttemptDelay < 0) throw new ArgumentException("Reconnect attempt delay; must be 0 or more", nameof(reconnectAttemptDelay));
             
             SubscribedTopic newTopic = new(topicId, serverUrl, username, password);
 
@@ -306,7 +312,7 @@ namespace ntfysh_client.Notifications
             }
             
             CancellationTokenSource listenCanceller = new();
-            Task listenTask = ListenToTopicWithWebsocketAsync(new Uri($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws"), credentials, listenCanceller.Token, newTopic);
+            Task listenTask = ListenToTopicWithWebsocketAsync(new Uri($"{serverUrl}/{HttpUtility.UrlEncode(topicId)}/ws"), credentials, newTopic, reconnectAttempts, reconnectAttemptDelay, listenCanceller.Token);
             
             newTopic.SetAssociatedRunner(listenTask, listenCanceller);
             

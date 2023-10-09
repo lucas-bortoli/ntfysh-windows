@@ -92,15 +92,19 @@ namespace ntfysh_client
 
             //Do not subscribe on cancelled dialog
             if (result != DialogResult.OK) return;
+            
+            //Convert the reconnection values to ints
+            int reconnectAttempts = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttempts));
+            int reconnectAttemptDelay = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttemptDelay));
                 
             //Subscribe
             if (dialog.UseWebsockets)
             {
-                _notificationListener.SubscribeToTopicUsingWebsocket(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password);
+                _notificationListener.SubscribeToTopicUsingWebsocket(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password, reconnectAttempts, reconnectAttemptDelay);
             }
             else
             {
-                _notificationListener.SubscribeToTopicUsingLongHttpJson(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password);
+                _notificationListener.SubscribeToTopicUsingLongHttpJson(dialog.Unique, dialog.TopicId, dialog.ServerUrl, dialog.Username, dialog.Password, reconnectAttempts, reconnectAttemptDelay);
             }
 
             //Add to the user visible list
@@ -129,6 +133,8 @@ namespace ntfysh_client
 
             //Load current settings into dialog
             dialog.Timeout = Program.Settings.Timeout;
+            dialog.ReconnectAttempts = Program.Settings.ReconnectAttempts;
+            dialog.ReconnectAttemptDelay = Program.Settings.ReconnectAttemptDelay;
             
             //Show dialog
             DialogResult result = dialog.ShowDialog();
@@ -138,6 +144,8 @@ namespace ntfysh_client
 
             //Read new settings from dialog
             Program.Settings.Timeout = dialog.Timeout;
+            Program.Settings.ReconnectAttempts = dialog.ReconnectAttempts;
+            Program.Settings.ReconnectAttemptDelay = dialog.ReconnectAttemptDelay;
             
             //Save new settings persistently
             SaveSettingsToFile();
@@ -259,6 +267,10 @@ namespace ntfysh_client
                 return;
             }
             
+            //Convert the reconnection values to ints
+            int reconnectAttempts = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttempts));
+            int reconnectAttemptDelay = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttemptDelay));
+            
             //Load them in
             foreach (SubscribedTopic topic in topics)
             {
@@ -268,12 +280,12 @@ namespace ntfysh_client
                 {
                     case "ws":
                     case "wss":
-                        _notificationListener.SubscribeToTopicUsingWebsocket($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                        _notificationListener.SubscribeToTopicUsingWebsocket($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password, reconnectAttempts, reconnectAttemptDelay);
                         break;
                     
                     case "http":
                     case "https":
-                        _notificationListener.SubscribeToTopicUsingLongHttpJson($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password);
+                        _notificationListener.SubscribeToTopicUsingLongHttpJson($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password, reconnectAttempts, reconnectAttemptDelay);
                         break;
                     
                     default:
@@ -286,17 +298,34 @@ namespace ntfysh_client
 
         private SettingsModel GetDefaultSettings() => new()
         {
-            Timeout = 5
+            Revision = 1,
+            Timeout = 5,
+            ReconnectAttempts = 10,
+            ReconnectAttemptDelay = 3
         };
+        
+        private void MergeSettingsRevisions(SettingsModel older, SettingsModel newer)
+        {
+            //Apply settings introduced in Revision 1
+            if (older.Revision < 1)
+            {
+                older.ReconnectAttempts = newer.ReconnectAttempts;
+                older.ReconnectAttemptDelay = newer.ReconnectAttemptDelay;
+            }
+
+            //Update the revision
+            older.Revision = newer.Revision;
+        }
 
         private void LoadSettings()
         {
             string settingsFilePath = GetSettingsFilePath();
+            SettingsModel defaultSettings = GetDefaultSettings();
             
             //Check if we have any settings file on disk to load. If we don't, initialise defaults
             if (!File.Exists(settingsFilePath))
             {
-                Program.Settings = GetDefaultSettings();
+                Program.Settings = defaultSettings;
                 
                 SaveSettingsToFile();
 
@@ -309,7 +338,7 @@ namespace ntfysh_client
             //Check if the file is empty. If it is, initialise default settings
             if (string.IsNullOrWhiteSpace(settingsSerialised))
             {
-                Program.Settings = GetDefaultSettings();
+                Program.Settings = defaultSettings;
                 
                 SaveSettingsToFile();
 
@@ -322,14 +351,21 @@ namespace ntfysh_client
             //Check if the deserialise succeeded. If it didn't, initialise default settings
             if (settings is null)
             {
-                Program.Settings = GetDefaultSettings();
+                Program.Settings = defaultSettings;
                 
                 SaveSettingsToFile();
 
                 return;
             }
-
+            
             Program.Settings = settings;
+            
+            //Check the settings revision. If it is older than the current latest revision, apply the settings defaults missing from previous revision
+            if (Program.Settings.Revision < defaultSettings.ReconnectAttempts)
+            {
+                MergeSettingsRevisions(Program.Settings, defaultSettings);
+                SaveSettingsToFile();
+            }
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)

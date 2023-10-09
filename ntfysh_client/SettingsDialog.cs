@@ -11,6 +11,18 @@ namespace ntfysh_client
             set => timeout.Value = value;
         }
 
+        public decimal ReconnectAttempts
+        {
+            get => reconnectAttempts.Value;
+            set => reconnectAttempts.Value = value;
+        }
+
+        public decimal ReconnectAttemptDelay
+        {
+            get => reconnectAttemptDelay.Value;
+            set => reconnectAttemptDelay.Value = value;
+        }
+
         public SettingsDialog()
         {
             InitializeComponent();
