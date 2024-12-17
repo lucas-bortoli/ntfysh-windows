@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -349,6 +350,12 @@ namespace ntfysh_client.Notifications
 
             //Remove the old topic
             SubscribedTopicsByUnique.Remove(topicUniqueString);
+        }
+
+        public async Task<HttpResponseMessage> SendNotification(string host, NtfyEvent message)
+        {
+            var httpClient = new HttpClient();
+            return await httpClient.PostAsJsonAsync<NtfyEvent>(host, message);
         }
     }
 }

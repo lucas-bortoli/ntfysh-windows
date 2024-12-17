@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using ntfysh_client.Notifications;
@@ -24,10 +26,10 @@ namespace ntfysh_client
             _notificationListener.OnNotificationReceive += OnNotificationReceive;
             _notificationListener.OnConnectionMultiAttemptFailure += OnConnectionMultiAttemptFailure;
             _notificationListener.OnConnectionCredentialsFailure += OnConnectionCredentialsFailure;
-            
+
             InitializeComponent();
         }
-        
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             LoadSettings();
@@ -39,7 +41,7 @@ namespace ntfysh_client
             if (_startInTray)
             {
                 _startInTray = false;
-                
+
                 /*
                  * TODO This little workaround prevents the window from appearing with a flash, but the taskbar icon appears for a moment.
                  *
@@ -49,10 +51,10 @@ namespace ntfysh_client
                 base.SetVisibleCore(true);
                 base.SetVisibleCore(false);
                 Opacity = 1;
-                
+
                 return;
             }
-            
+
             base.SetVisibleCore(value);
         }
 
@@ -69,7 +71,7 @@ namespace ntfysh_client
             };
 
             string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
-            
+
             notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
         }
 
@@ -77,11 +79,11 @@ namespace ntfysh_client
         {
             MessageBox.Show($"Connecting to topic ID '{topic.TopicId}' on server '{topic.ServerUrl}' failed after multiple attempts.\n\nThis topic ID will be ignored and you will not receive notifications for it until you restart the application.", "Connection Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        
+
         private void OnConnectionCredentialsFailure(NotificationListener sender, SubscribedTopic topic)
         {
             string reason = string.IsNullOrWhiteSpace(topic.Username) ? "credentials are required but were not provided" : "the entered credentials are incorrect";
-            
+
             MessageBox.Show($"Connecting to topic ID '{topic.TopicId}' on server '{topic.ServerUrl}' failed because {reason}.\n\nThis topic ID will be ignored and you will not receive notifications for it until you correct the credentials.", "Connection Authentication Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
@@ -92,11 +94,11 @@ namespace ntfysh_client
 
             //Do not subscribe on cancelled dialog
             if (result != DialogResult.OK) return;
-            
+
             //Convert the reconnection values to ints
             int reconnectAttempts = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttempts));
             int reconnectAttemptDelay = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttemptDelay));
-                
+
             //Subscribe
             if (dialog.UseWebsockets)
             {
@@ -109,7 +111,7 @@ namespace ntfysh_client
 
             //Add to the user visible list
             notificationTopics.Items.Add(dialog.Unique);
-                    
+
             //Save the topics persistently
             SaveTopicsToFile();
         }
@@ -119,14 +121,14 @@ namespace ntfysh_client
             while (notificationTopics.SelectedIndex > -1)
             {
                 string topicUniqueString = (string)notificationTopics.Items[notificationTopics.SelectedIndex];
-                
+
                 await _notificationListener.UnsubscribeFromTopicAsync(topicUniqueString);
                 notificationTopics.Items.Remove(topicUniqueString);
             }
 
             SaveTopicsToFile();
         }
-        
+
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using SettingsDialog dialog = new();
@@ -135,7 +137,7 @@ namespace ntfysh_client
             dialog.Timeout = Program.Settings.Timeout;
             dialog.ReconnectAttempts = Program.Settings.ReconnectAttempts;
             dialog.ReconnectAttemptDelay = Program.Settings.ReconnectAttemptDelay;
-            
+
             //Show dialog
             DialogResult result = dialog.ShowDialog();
 
@@ -146,7 +148,7 @@ namespace ntfysh_client
             Program.Settings.Timeout = dialog.Timeout;
             Program.Settings.ReconnectAttempts = dialog.ReconnectAttempts;
             Program.Settings.ReconnectAttemptDelay = dialog.ReconnectAttemptDelay;
-            
+
             //Save new settings persistently
             SaveSettingsToFile();
         }
@@ -167,9 +169,9 @@ namespace ntfysh_client
         private void notifyIcon_Click(object sender, EventArgs e)
         {
             MouseEventArgs mouseEv = (MouseEventArgs)e;
-            
+
             if (mouseEv.Button != MouseButtons.Left) return;
-            
+
             Visible = !Visible;
             BringToFront();
         }
@@ -185,7 +187,7 @@ namespace ntfysh_client
             string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
             return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for topics file"), "topics.json");
         }
-        
+
         private string GetLegacyTopicsFilePath()
         {
             string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
@@ -195,20 +197,20 @@ namespace ntfysh_client
         private void SaveTopicsToFile()
         {
             string topicsSerialised = JsonConvert.SerializeObject(_notificationListener.SubscribedTopicsByUnique.Select(st => st.Value).ToList(), Formatting.Indented);
-            
+
             File.WriteAllText(GetTopicsFilePath(), topicsSerialised);
         }
-        
+
         private string GetSettingsFilePath()
         {
             string binaryDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new InvalidOperationException("Unable to determine path for application");
             return Path.Combine(binaryDirectory ?? throw new InvalidOperationException("Unable to determine path for settings file"), "settings.json");
         }
-        
+
         private void SaveSettingsToFile()
         {
             string settingsSerialised = JsonConvert.SerializeObject(Program.Settings, Formatting.Indented);
-            
+
             File.WriteAllText(GetSettingsFilePath(), settingsSerialised);
         }
 
@@ -222,7 +224,7 @@ namespace ntfysh_client
             {
                 //Read old format
                 List<string> legacyTopics = new List<string>();
-                
+
                 using (StreamReader reader = new StreamReader(legacyTopicsPath))
                 {
                     while (!reader.EndOfStream)
@@ -236,17 +238,17 @@ namespace ntfysh_client
                 List<SubscribedTopic> newTopics = legacyTopics.Select(lt => new SubscribedTopic(lt, "https://ntfy.sh", null, null)).ToList();
 
                 string newFormatSerialised = JsonConvert.SerializeObject(newTopics, Formatting.Indented);
-                
+
                 //Write new format
                 File.WriteAllText(topicsFilePath, newFormatSerialised);
-                
+
                 //Delete old format
                 File.Delete(legacyTopicsPath);
             }
-            
+
             //Check if we have any topics file on disk to load
             if (!File.Exists(topicsFilePath)) return;
-            
+
             //We have a topics file. Load it!
             string topicsSerialised = File.ReadAllText(topicsFilePath);
 
@@ -266,32 +268,32 @@ namespace ntfysh_client
                 //TODO Deserialise error!
                 return;
             }
-            
+
             //Convert the reconnection values to ints
             int reconnectAttempts = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttempts));
             int reconnectAttemptDelay = Convert.ToInt32(Math.Ceiling(Program.Settings.ReconnectAttemptDelay));
-            
+
             //Load them in
             foreach (SubscribedTopic topic in topics)
             {
                 string[] parts = topic.ServerUrl.Split("://", 2);
-                
+
                 switch (parts[0].ToLower())
                 {
                     case "ws":
                     case "wss":
                         _notificationListener.SubscribeToTopicUsingWebsocket($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password, reconnectAttempts, reconnectAttemptDelay);
                         break;
-                    
+
                     case "http":
                     case "https":
                         _notificationListener.SubscribeToTopicUsingLongHttpJson($"{topic.TopicId}@{topic.ServerUrl}", topic.TopicId, topic.ServerUrl, topic.Username, topic.Password, reconnectAttempts, reconnectAttemptDelay);
                         break;
-                    
+
                     default:
                         continue;
                 }
-                
+
                 notificationTopics.Items.Add($"{topic.TopicId}@{topic.ServerUrl}");
             }
         }
@@ -303,7 +305,7 @@ namespace ntfysh_client
             ReconnectAttempts = 10,
             ReconnectAttemptDelay = 3
         };
-        
+
         private void MergeSettingsRevisions(SettingsModel older, SettingsModel newer)
         {
             //Apply settings introduced in Revision 1
@@ -321,12 +323,12 @@ namespace ntfysh_client
         {
             string settingsFilePath = GetSettingsFilePath();
             SettingsModel defaultSettings = GetDefaultSettings();
-            
+
             //Check if we have any settings file on disk to load. If we don't, initialise defaults
             if (!File.Exists(settingsFilePath))
             {
                 Program.Settings = defaultSettings;
-                
+
                 SaveSettingsToFile();
 
                 return;
@@ -339,7 +341,7 @@ namespace ntfysh_client
             if (string.IsNullOrWhiteSpace(settingsSerialised))
             {
                 Program.Settings = defaultSettings;
-                
+
                 SaveSettingsToFile();
 
                 return;
@@ -352,14 +354,14 @@ namespace ntfysh_client
             if (settings is null)
             {
                 Program.Settings = defaultSettings;
-                
+
                 SaveSettingsToFile();
 
                 return;
             }
-            
+
             Program.Settings = settings;
-            
+
             //Check the settings revision. If it is older than the current latest revision, apply the settings defaults missing from previous revision
             if (Program.Settings.Revision < defaultSettings.ReconnectAttempts)
             {
@@ -372,14 +374,14 @@ namespace ntfysh_client
         {
             notifyIcon.Dispose();
         }
-        
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Let it close
             if (_trueExit) return;
 
             if (e.CloseReason != CloseReason.UserClosing) return;
-            
+
             Visible = false;
             e.Cancel = true;
         }
@@ -408,6 +410,33 @@ namespace ntfysh_client
         {
             _trueExit = true;
             Close();
+        }
+
+        private async void SendNotificationMenuItem_Click(object sender, System.EventArgs e)
+        {
+            await SendMessage();
+        }
+
+        private async void notificationTopics_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            await SendMessage();
+        }
+
+        private async Task SendMessage()
+        {
+            if (notificationTopics.SelectedItem != null && string.IsNullOrEmpty(notificationTopics.SelectedItem as string) == false)
+            {
+                var dlg = new SendMessageForm();
+                var r = dlg.ShowDialog(this);
+                if (r == DialogResult.OK)
+                {
+                    var topicAndHost = notificationTopics.SelectedItem.ToString()?.Split("@");
+                    var topic = topicAndHost[0];
+                    var host = topicAndHost[1].Replace("wss", "https");
+                    var msg = dlg.Message;
+                    await _notificationListener.SendNotification(host, new NtfyEvent { Topic = topic, Title = dlg.Title, Message = msg });
+                }
+            }
         }
     }
 }
