@@ -352,10 +352,24 @@ namespace ntfysh_client.Notifications
             SubscribedTopicsByUnique.Remove(topicUniqueString);
         }
 
-        public async Task<HttpResponseMessage> SendNotification(string host, NtfyEvent message)
+        public async Task SendNotification(string key, string title, string message)
         {
-            var httpClient = new HttpClient();
-            return await httpClient.PostAsJsonAsync<NtfyEvent>(host, message);
+            if (SubscribedTopicsByUnique.TryGetValue(key, out SubscribedTopic topic))
+            {
+                HttpClient httpClient = new HttpClient();
+                PublishEvent notification = new PublishEvent();
+                notification.Title = title;
+                notification.Message = message;
+                notification.Topic = topic.TopicId;
+                if (!string.IsNullOrEmpty(topic.Username) || !string.IsNullOrEmpty(topic.Password))
+                {
+                    string value = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{topic.Username}:{topic.Password}"));
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", value);
+                }
+
+                HttpResponseMessage response = await httpClient.PostAsJsonAsync<PublishEvent>(topic.ServerUrl.Replace("wss://", "https://"), notification);
+                response.EnsureSuccessStatusCode();
+            }
         }
     }
 }

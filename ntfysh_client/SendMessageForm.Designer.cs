@@ -92,7 +92,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "SendMessageForm";
-            Text = "SendMessageForm";
+            Text = "Send Message";
             ResumeLayout(false);
             PerformLayout();
         }

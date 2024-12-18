@@ -426,15 +426,19 @@ namespace ntfysh_client
         {
             if (notificationTopics.SelectedItem != null && string.IsNullOrEmpty(notificationTopics.SelectedItem as string) == false)
             {
-                var dlg = new SendMessageForm();
-                var r = dlg.ShowDialog(this);
-                if (r == DialogResult.OK)
+                try
                 {
-                    var topicAndHost = notificationTopics.SelectedItem.ToString()?.Split("@");
-                    var topic = topicAndHost[0];
-                    var host = topicAndHost[1].Replace("wss", "https");
-                    var msg = dlg.Message;
-                    await _notificationListener.SendNotification(host, new NtfyEvent { Topic = topic, Title = dlg.Title, Message = msg });
+                    SendMessageForm dlg = new SendMessageForm();
+                    DialogResult r = dlg.ShowDialog(this);
+                    if (r == DialogResult.OK)
+                    {
+                        string key = notificationTopics.SelectedItem.ToString();
+                        await _notificationListener.SendNotification(key, dlg.Title, dlg.Message);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK);
                 }
             }
         }

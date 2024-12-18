@@ -101,12 +101,13 @@ namespace ntfysh_client
             // 
             topicContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { sendNotificationMenuItem });
             topicContextMenu.Name = "topicContextMenu";
-            topicContextMenu.Size = new System.Drawing.Size(167, 26);
+            topicContextMenu.Size = new System.Drawing.Size(181, 48);
             // 
             // sendNotificationMenuItem
             // 
+            sendNotificationMenuItem.Image = (System.Drawing.Image)resources.GetObject("sendNotificationMenuItem.Image");
             sendNotificationMenuItem.Name = "sendNotificationMenuItem";
-            sendNotificationMenuItem.Size = new System.Drawing.Size(166, 22);
+            sendNotificationMenuItem.Size = new System.Drawing.Size(180, 22);
             sendNotificationMenuItem.Text = "Send Notification";
             sendNotificationMenuItem.Click += SendNotificationMenuItem_Click;
             // 
@@ -162,7 +163,7 @@ namespace ntfysh_client
             // 
             exitToolStripMenuItem1.Image = (System.Drawing.Image)resources.GetObject("exitToolStripMenuItem1.Image");
             exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            exitToolStripMenuItem1.Size = new System.Drawing.Size(116, 22);
+            exitToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             exitToolStripMenuItem1.Text = "Exit";
             exitToolStripMenuItem1.Click += exitToolStripMenuItem1_Click;
             // 
@@ -170,7 +171,7 @@ namespace ntfysh_client
             // 
             settingsToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("settingsToolStripMenuItem.Image");
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             settingsToolStripMenuItem.Text = "Settings";
             settingsToolStripMenuItem.Click += settingsToolStripMenuItem_Click;
             // 
