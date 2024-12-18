@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -349,6 +350,26 @@ namespace ntfysh_client.Notifications
 
             //Remove the old topic
             SubscribedTopicsByUnique.Remove(topicUniqueString);
+        }
+
+        public async Task SendNotification(string key, string title, string message)
+        {
+            if (SubscribedTopicsByUnique.TryGetValue(key, out SubscribedTopic topic))
+            {
+                HttpClient httpClient = new HttpClient();
+                PublishEvent notification = new PublishEvent();
+                notification.Title = title;
+                notification.Message = message;
+                notification.Topic = topic.TopicId;
+                if (!string.IsNullOrEmpty(topic.Username) || !string.IsNullOrEmpty(topic.Password))
+                {
+                    string value = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{topic.Username}:{topic.Password}"));
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", value);
+                }
+
+                HttpResponseMessage response = await httpClient.PostAsJsonAsync<PublishEvent>(topic.ServerUrl.Replace("wss://", "https://"), notification);
+                response.EnsureSuccessStatusCode();
+            }
         }
     }
 }

@@ -29,209 +29,220 @@ namespace ntfysh_client
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.subscribeNewTopic = new System.Windows.Forms.Button();
-            this.removeSelectedTopics = new System.Windows.Forms.Button();
-            this.notificationTopics = new System.Windows.Forms.ListBox();
-            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.trayContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.showControlWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ntfyshWebsiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.label1 = new System.Windows.Forms.Label();
-            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.trayContextMenu.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
-            this.SuspendLayout();
+            subscribeNewTopic = new System.Windows.Forms.Button();
+            removeSelectedTopics = new System.Windows.Forms.Button();
+            notificationTopics = new System.Windows.Forms.ListBox();
+            topicContextMenu = new System.Windows.Forms.ContextMenuStrip(components);
+            sendNotificationMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            notifyIcon = new System.Windows.Forms.NotifyIcon(components);
+            trayContextMenu = new System.Windows.Forms.ContextMenuStrip(components);
+            showControlWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            menuStrip1 = new System.Windows.Forms.MenuStrip();
+            fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            ntfyshWebsiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            label1 = new System.Windows.Forms.Label();
+            toolTip = new System.Windows.Forms.ToolTip(components);
+            topicContextMenu.SuspendLayout();
+            trayContextMenu.SuspendLayout();
+            menuStrip1.SuspendLayout();
+            SuspendLayout();
             // 
             // subscribeNewTopic
             // 
-            this.subscribeNewTopic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.subscribeNewTopic.Location = new System.Drawing.Point(211, 251);
-            this.subscribeNewTopic.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.subscribeNewTopic.Name = "subscribeNewTopic";
-            this.subscribeNewTopic.Size = new System.Drawing.Size(188, 27);
-            this.subscribeNewTopic.TabIndex = 2;
-            this.subscribeNewTopic.Text = "Add";
-            this.subscribeNewTopic.UseVisualStyleBackColor = true;
-            this.subscribeNewTopic.Click += new System.EventHandler(this.subscribeNewTopic_Click);
+            subscribeNewTopic.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            subscribeNewTopic.Location = new System.Drawing.Point(211, 251);
+            subscribeNewTopic.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            subscribeNewTopic.Name = "subscribeNewTopic";
+            subscribeNewTopic.Size = new System.Drawing.Size(188, 27);
+            subscribeNewTopic.TabIndex = 2;
+            subscribeNewTopic.Text = "Add";
+            subscribeNewTopic.UseVisualStyleBackColor = true;
+            subscribeNewTopic.Click += subscribeNewTopic_Click;
             // 
             // removeSelectedTopics
             // 
-            this.removeSelectedTopics.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.removeSelectedTopics.Enabled = false;
-            this.removeSelectedTopics.Location = new System.Drawing.Point(13, 251);
-            this.removeSelectedTopics.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.removeSelectedTopics.Name = "removeSelectedTopics";
-            this.removeSelectedTopics.Size = new System.Drawing.Size(188, 27);
-            this.removeSelectedTopics.TabIndex = 0;
-            this.removeSelectedTopics.Text = "Remove selected";
-            this.removeSelectedTopics.UseVisualStyleBackColor = true;
-            this.removeSelectedTopics.Click += new System.EventHandler(this.removeSelectedTopics_Click);
+            removeSelectedTopics.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            removeSelectedTopics.Enabled = false;
+            removeSelectedTopics.Location = new System.Drawing.Point(13, 251);
+            removeSelectedTopics.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            removeSelectedTopics.Name = "removeSelectedTopics";
+            removeSelectedTopics.Size = new System.Drawing.Size(188, 27);
+            removeSelectedTopics.TabIndex = 0;
+            removeSelectedTopics.Text = "Remove selected";
+            removeSelectedTopics.UseVisualStyleBackColor = true;
+            removeSelectedTopics.Click += removeSelectedTopics_Click;
             // 
             // notificationTopics
             // 
-            this.notificationTopics.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.notificationTopics.FormattingEnabled = true;
-            this.notificationTopics.ItemHeight = 15;
-            this.notificationTopics.Location = new System.Drawing.Point(13, 46);
-            this.notificationTopics.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.notificationTopics.Name = "notificationTopics";
-            this.notificationTopics.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.notificationTopics.Size = new System.Drawing.Size(386, 199);
-            this.notificationTopics.TabIndex = 3;
-            this.notificationTopics.Click += new System.EventHandler(this.notificationTopics_Click);
-            this.notificationTopics.SelectedValueChanged += new System.EventHandler(this.notificationTopics_SelectedValueChanged);
+            notificationTopics.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            notificationTopics.ContextMenuStrip = topicContextMenu;
+            notificationTopics.FormattingEnabled = true;
+            notificationTopics.ItemHeight = 15;
+            notificationTopics.Location = new System.Drawing.Point(13, 46);
+            notificationTopics.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            notificationTopics.Name = "notificationTopics";
+            notificationTopics.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            notificationTopics.Size = new System.Drawing.Size(386, 199);
+            notificationTopics.TabIndex = 3;
+            toolTip.SetToolTip(notificationTopics, "Double click topic to send message");
+            notificationTopics.Click += notificationTopics_Click;
+            notificationTopics.SelectedValueChanged += notificationTopics_SelectedValueChanged;
+            notificationTopics.MouseDoubleClick += notificationTopics_MouseDoubleClick;
+            // 
+            // topicContextMenu
+            // 
+            topicContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { sendNotificationMenuItem });
+            topicContextMenu.Name = "topicContextMenu";
+            topicContextMenu.Size = new System.Drawing.Size(181, 48);
+            // 
+            // sendNotificationMenuItem
+            // 
+            sendNotificationMenuItem.Image = (System.Drawing.Image)resources.GetObject("sendNotificationMenuItem.Image");
+            sendNotificationMenuItem.Name = "sendNotificationMenuItem";
+            sendNotificationMenuItem.Size = new System.Drawing.Size(180, 22);
+            sendNotificationMenuItem.Text = "Send Notification";
+            sendNotificationMenuItem.Click += SendNotificationMenuItem_Click;
             // 
             // notifyIcon
             // 
-            this.notifyIcon.ContextMenuStrip = this.trayContextMenu;
-            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
-            this.notifyIcon.Text = "ntfy.sh";
-            this.notifyIcon.Visible = true;
-            this.notifyIcon.Click += new System.EventHandler(this.notifyIcon_Click);
+            notifyIcon.ContextMenuStrip = trayContextMenu;
+            notifyIcon.Icon = (System.Drawing.Icon)resources.GetObject("notifyIcon.Icon");
+            notifyIcon.Text = "ntfy.sh";
+            notifyIcon.Visible = true;
+            notifyIcon.Click += notifyIcon_Click;
             // 
             // trayContextMenu
             // 
-            this.trayContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showControlWindowToolStripMenuItem,
-            this.exitToolStripMenuItem});
-            this.trayContextMenu.Name = "trayContextMenu";
-            this.trayContextMenu.Size = new System.Drawing.Size(190, 48);
+            trayContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { showControlWindowToolStripMenuItem, exitToolStripMenuItem });
+            trayContextMenu.Name = "trayContextMenu";
+            trayContextMenu.Size = new System.Drawing.Size(190, 48);
             // 
             // showControlWindowToolStripMenuItem
             // 
-            this.showControlWindowToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("showControlWindowToolStripMenuItem.Image")));
-            this.showControlWindowToolStripMenuItem.Name = "showControlWindowToolStripMenuItem";
-            this.showControlWindowToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.showControlWindowToolStripMenuItem.Text = "Show control window";
-            this.showControlWindowToolStripMenuItem.Click += new System.EventHandler(this.showControlWindowToolStripMenuItem_Click);
+            showControlWindowToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("showControlWindowToolStripMenuItem.Image");
+            showControlWindowToolStripMenuItem.Name = "showControlWindowToolStripMenuItem";
+            showControlWindowToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            showControlWindowToolStripMenuItem.Text = "Show control window";
+            showControlWindowToolStripMenuItem.Click += showControlWindowToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
-            this.exitToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("exitToolStripMenuItem.Image")));
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            exitToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("exitToolStripMenuItem.Image");
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // menuStrip1
             // 
-            this.menuStrip1.BackColor = System.Drawing.Color.White;
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.helpToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
-            this.menuStrip1.Size = new System.Drawing.Size(412, 24);
-            this.menuStrip1.TabIndex = 4;
-            this.menuStrip1.Text = "menuStrip1";
+            menuStrip1.BackColor = System.Drawing.Color.White;
+            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { fileToolStripMenuItem, helpToolStripMenuItem });
+            menuStrip1.Location = new System.Drawing.Point(0, 0);
+            menuStrip1.Name = "menuStrip1";
+            menuStrip1.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
+            menuStrip1.Size = new System.Drawing.Size(412, 24);
+            menuStrip1.TabIndex = 4;
+            menuStrip1.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.exitToolStripMenuItem1,
-            this.settingsToolStripMenuItem});
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { exitToolStripMenuItem1, settingsToolStripMenuItem });
+            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            fileToolStripMenuItem.Text = "File";
             // 
             // exitToolStripMenuItem1
             // 
-            this.exitToolStripMenuItem1.Image = ((System.Drawing.Image)(resources.GetObject("exitToolStripMenuItem1.Image")));
-            this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
-            this.exitToolStripMenuItem1.Text = "Exit";
-            this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem1_Click);
-            // 
-            // helpToolStripMenuItem
-            // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ntfyshWebsiteToolStripMenuItem,
-            this.toolStripMenuItem1,
-            this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
-            // 
-            // ntfyshWebsiteToolStripMenuItem
-            // 
-            this.ntfyshWebsiteToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("ntfyshWebsiteToolStripMenuItem.Image")));
-            this.ntfyshWebsiteToolStripMenuItem.Name = "ntfyshWebsiteToolStripMenuItem";
-            this.ntfyshWebsiteToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.ntfyshWebsiteToolStripMenuItem.Text = "Open ntfy.sh website";
-            this.ntfyshWebsiteToolStripMenuItem.Click += new System.EventHandler(this.ntfyshWebsiteToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(182, 6);
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("aboutToolStripMenuItem.Image")));
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.aboutToolStripMenuItem.Text = "About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 27);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(170, 15);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Subscribed Notification Topics:";
+            exitToolStripMenuItem1.Image = (System.Drawing.Image)resources.GetObject("exitToolStripMenuItem1.Image");
+            exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
+            exitToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            exitToolStripMenuItem1.Text = "Exit";
+            exitToolStripMenuItem1.Click += exitToolStripMenuItem1_Click;
             // 
             // settingsToolStripMenuItem
             // 
-            this.settingsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("settingsToolStripMenuItem.Image")));
-            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.settingsToolStripMenuItem.Text = "Settings";
-            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+            settingsToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("settingsToolStripMenuItem.Image");
+            settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            settingsToolStripMenuItem.Text = "Settings";
+            settingsToolStripMenuItem.Click += settingsToolStripMenuItem_Click;
+            // 
+            // helpToolStripMenuItem
+            // 
+            helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ntfyshWebsiteToolStripMenuItem, toolStripMenuItem1, aboutToolStripMenuItem });
+            helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            helpToolStripMenuItem.Text = "Help";
+            // 
+            // ntfyshWebsiteToolStripMenuItem
+            // 
+            ntfyshWebsiteToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("ntfyshWebsiteToolStripMenuItem.Image");
+            ntfyshWebsiteToolStripMenuItem.Name = "ntfyshWebsiteToolStripMenuItem";
+            ntfyshWebsiteToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            ntfyshWebsiteToolStripMenuItem.Text = "Open ntfy.sh website";
+            ntfyshWebsiteToolStripMenuItem.Click += ntfyshWebsiteToolStripMenuItem_Click;
+            // 
+            // toolStripMenuItem1
+            // 
+            toolStripMenuItem1.Name = "toolStripMenuItem1";
+            toolStripMenuItem1.Size = new System.Drawing.Size(182, 6);
+            // 
+            // aboutToolStripMenuItem
+            // 
+            aboutToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("aboutToolStripMenuItem.Image");
+            aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            aboutToolStripMenuItem.Text = "About";
+            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new System.Drawing.Point(13, 27);
+            label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(171, 15);
+            label1.TabIndex = 1;
+            label1.Text = "Subscribed Notification Topics:";
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(412, 288);
-            this.Controls.Add(this.menuStrip1);
-            this.Controls.Add(this.notificationTopics);
-            this.Controls.Add(this.removeSelectedTopics);
-            this.Controls.Add(this.subscribeNewTopic);
-            this.Controls.Add(this.label1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.KeyPreview = true;
-            this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "MainForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ntfy.sh";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
-            this.Load += new System.EventHandler(this.MainForm_Load);
-            this.trayContextMenu.ResumeLayout(false);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            BackColor = System.Drawing.Color.White;
+            ClientSize = new System.Drawing.Size(412, 288);
+            Controls.Add(menuStrip1);
+            Controls.Add(notificationTopics);
+            Controls.Add(removeSelectedTopics);
+            Controls.Add(subscribeNewTopic);
+            Controls.Add(label1);
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
+            KeyPreview = true;
+            MainMenuStrip = menuStrip1;
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "MainForm";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            Text = "ntfy.sh";
+            FormClosing += MainForm_FormClosing;
+            FormClosed += MainForm_FormClosed;
+            Load += MainForm_Load;
+            topicContextMenu.ResumeLayout(false);
+            trayContextMenu.ResumeLayout(false);
+            menuStrip1.ResumeLayout(false);
+            menuStrip1.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -251,6 +262,9 @@ namespace ntfysh_client
         private System.Windows.Forms.ToolStripMenuItem ntfyshWebsiteToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip topicContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem sendNotificationMenuItem;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }
 
