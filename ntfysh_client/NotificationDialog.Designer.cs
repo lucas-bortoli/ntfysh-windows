@@ -31,6 +31,8 @@
             tbTitle = new System.Windows.Forms.TextBox();
             button1 = new System.Windows.Forms.Button();
             tbMessage = new System.Windows.Forms.TextBox();
+            iconBox = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)iconBox).BeginInit();
             SuspendLayout();
             // 
             // tbTitle
@@ -38,10 +40,10 @@
             tbTitle.BackColor = System.Drawing.SystemColors.ControlDark;
             tbTitle.BorderStyle = System.Windows.Forms.BorderStyle.None;
             tbTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            tbTitle.Location = new System.Drawing.Point(12, 19);
+            tbTitle.Location = new System.Drawing.Point(54, 13);
             tbTitle.Name = "tbTitle";
             tbTitle.ReadOnly = true;
-            tbTitle.Size = new System.Drawing.Size(725, 32);
+            tbTitle.Size = new System.Drawing.Size(683, 32);
             tbTitle.TabIndex = 0;
             // 
             // button1
@@ -70,18 +72,28 @@
             tbMessage.Size = new System.Drawing.Size(725, 253);
             tbMessage.TabIndex = 2;
             // 
+            // iconBox
+            // 
+            iconBox.Location = new System.Drawing.Point(12, 12);
+            iconBox.Name = "iconBox";
+            iconBox.Size = new System.Drawing.Size(36, 39);
+            iconBox.TabIndex = 3;
+            iconBox.TabStop = false;
+            // 
             // NotificationDialog
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.SystemColors.ControlDark;
             ClientSize = new System.Drawing.Size(800, 450);
+            Controls.Add(iconBox);
             Controls.Add(tbMessage);
             Controls.Add(button1);
             Controls.Add(tbTitle);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             Name = "NotificationDialog";
             Text = "NotificationDialog";
+            ((System.ComponentModel.ISupportInitialize)iconBox).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -91,5 +103,6 @@
         private System.Windows.Forms.TextBox tbTitle;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox tbMessage;
+        private System.Windows.Forms.PictureBox iconBox;
     }
 }

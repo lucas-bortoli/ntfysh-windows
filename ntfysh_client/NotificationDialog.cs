@@ -21,6 +21,7 @@ namespace ntfysh_client
         private const int ScreenMargin = 20;
 
         private System.Timers.Timer? timer = null;
+        private ToolTipIcon? _icon;
 
         private void SetWindowPosition()
         {
@@ -68,8 +69,13 @@ namespace ntfysh_client
             }
         }
 
-        public void ShowNotification(string title, string message, int timeout_ms=-1)
+        public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null)
         {
+            this._icon = icon;
+            if (this._icon != null)
+            {
+                this.iconBox.Image = ConvertToolTipIconToImage(_icon.Value);
+            }
             if (this.timer != null)
             {
                 this.timer.Stop();
@@ -85,6 +91,22 @@ namespace ntfysh_client
             this.tbMessage.Text = message;
             this.Show();
             this.SetWindowPosition();
+        }
+
+        private Image? ConvertToolTipIconToImage(ToolTipIcon icon)
+        {
+            switch (icon)
+            {
+                case ToolTipIcon.Info:
+                    return SystemIcons.Information.ToBitmap();
+                case ToolTipIcon.Warning:
+                    return SystemIcons.Warning.ToBitmap();
+                case ToolTipIcon.Error:
+                    return SystemIcons.Error.ToBitmap();
+                case ToolTipIcon.None:
+                default:
+                    return null;
+            }
         }
 
         public bool IsVisible

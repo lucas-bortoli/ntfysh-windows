@@ -73,9 +73,7 @@ namespace ntfysh_client
 
             string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
             
-            //notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
-            //this.notificationDialog.IsVisible = true;
-            this.notificationDialog.ShowNotification(finalTitle, e.Message, (int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds);
+            this.notificationDialog.ShowNotification(finalTitle, e.Message, (int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, priorityIcon);
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
