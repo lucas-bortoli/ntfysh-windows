@@ -23,58 +23,18 @@ namespace ntfysh_client
         private System.Timers.Timer? timer = null;
         private ToolTipIcon? _icon;
 
-        private void SetWindowPosition()
+        public bool IsVisible
         {
-            int workingtop = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
-            this.Top = workingtop - NotificationDialog.ScreenMargin;
-
-            int workingleft = Screen.PrimaryScreen.WorkingArea.Width - this.Width;
-            this.Left = workingleft - NotificationDialog.ScreenMargin;
+            get { return this.Visible; }
+            set { this.Visible = value; }
         }
 
-        protected override void SetVisibleCore(bool value)
+        public NotificationDialog()
         {
-
-            //base.SetVisibleCore(false);
-            this.SetWindowPosition();
-            if (value)
-            {
-                this.BringToFront();
-                AnimateWindow(
-                    this.Handle,
-                    time: 250,
-                    flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_NEGATIVE
-                );
-            }
-            base.SetVisibleCore(value);
-        }
-
-        private void ui_hide_window(object? sender, EventArgs e)
-        {
-            AnimateWindow(
-                this.Handle,
-                time: 250,
-                flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_POSITIVE | NFWinUserAnimateWindowConstnats.AW_HIDE
-            );
             this.IsVisible = false;
-        }
-
-        private void handleTimeout(object? sender, EventArgs e)
-        {
-            if (this.timer != null)
-            {
-                this.timer.Stop();
-                this.timer.Dispose();
-                this.timer = null;
-            }
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new Action(() => this.ui_hide_window(sender, e)));
-            }
-            else
-            {
-                this.ui_hide_window(sender, e);
-            }
+            this.TopMost = true;
+            InitializeComponent();
+            InitializeWindowHidden();
         }
 
         public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null)
@@ -101,6 +61,65 @@ namespace ntfysh_client
             this.SetWindowPosition();
         }
 
+        protected override void SetVisibleCore(bool value)
+        {
+            this.SetWindowPosition();
+            if (value)
+            {
+                this.BringToFront();
+                AnimateWindow(
+                    this.Handle,
+                    time: 250,
+                    flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_NEGATIVE
+                );
+            }
+            base.SetVisibleCore(value);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+        }
+
+        private void SetWindowPosition()
+        {
+            int workingtop = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
+            this.Top = workingtop - NotificationDialog.ScreenMargin;
+
+            int workingleft = Screen.PrimaryScreen.WorkingArea.Width - this.Width;
+            this.Left = workingleft - NotificationDialog.ScreenMargin;
+        }
+
+        private void ui_hide_window(object? sender, EventArgs e)
+        {
+            AnimateWindow(
+                this.Handle,
+                time: 250,
+                flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_POSITIVE | NFWinUserAnimateWindowConstnats.AW_HIDE
+            );
+            this.IsVisible = false;
+        }
+
+        private void handleTimeout(object? sender, EventArgs e)
+        {
+            if (this.timer != null) // check if the timer has already been disposed
+            {
+                this.timer.Stop();
+                this.timer.Dispose();
+                this.timer = null;
+            }
+            if (this.InvokeRequired)
+            {
+                // on a background thread, so invoke on the UI thread
+                this.Invoke(new Action(() => this.ui_hide_window(sender, e)));
+            }
+            else
+            {
+                // in the UI thread, invoke directly
+                this.ui_hide_window(sender, e);
+            }
+        }
+
         private Image? ConvertToolTipIconToImage(ToolTipIcon icon)
         {
             switch (icon)
@@ -117,25 +136,6 @@ namespace ntfysh_client
             }
         }
 
-        public bool IsVisible
-        {
-            get { return this.Visible; }
-            set { this.Visible = value; }
-        }
-
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-        }
-
-        public NotificationDialog()
-        {
-            this.IsVisible = false;
-            this.TopMost = true;
-            InitializeComponent();
-            InitializeWindowHidden();
-        }
-
         private void InitializeWindowHidden()
         {
             this.Opacity = 0;
@@ -149,6 +149,7 @@ namespace ntfysh_client
             // immediate
             this.IsVisible = false;
         }
+
         private class NFWinUserAnimateWindowConstnats
         {
             public const int AW_HOR_POSITIVE = 0x00000001;
