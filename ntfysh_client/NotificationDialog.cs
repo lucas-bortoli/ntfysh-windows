@@ -32,6 +32,10 @@ namespace ntfysh_client
 
         public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null)
         {
+            if (this.IsVisible)
+            {
+                this.handleTimeout(null, null);
+            }
             this._icon = icon;
             if (this._icon != null)
             {
@@ -83,7 +87,7 @@ namespace ntfysh_client
             this.Left = workingleft - NotificationDialog.ScreenMargin;
         }
 
-        private void ui_hide_window(object? sender, EventArgs e)
+        private void ui_hide_window(object? sender, EventArgs? e)
         {
             AnimateWindow(
                 this.Handle,
@@ -93,7 +97,7 @@ namespace ntfysh_client
             this.IsVisible = false;
         }
 
-        private void handleTimeout(object? sender, EventArgs e)
+        private void handleTimeout(object? sender, EventArgs? e)
         {
             if (this.timer != null) // check if the timer has already been disposed
             {
