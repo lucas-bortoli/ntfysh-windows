@@ -40,14 +40,22 @@ namespace ntfysh_client
             if (value)
             {
                 this.BringToFront();
-                AnimateWindow(this.Handle, 250, 0x00040000 | 0x00000008);
+                AnimateWindow(
+                    this.Handle,
+                    time: 250,
+                    flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_NEGATIVE
+                );
             }
             base.SetVisibleCore(value);
         }
 
         private void ui_hide_window(object? sender, EventArgs e)
         {
-            AnimateWindow(this.Handle, 250, 0x00040000 | 0x00000004 | 0x00010000);
+            AnimateWindow(
+                this.Handle,
+                time: 250,
+                flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_POSITIVE | NFWinUserAnimateWindowConstnats.AW_HIDE
+            );
             this.IsVisible = false;
         }
 
@@ -140,6 +148,18 @@ namespace ntfysh_client
         {
             // immediate
             this.IsVisible = false;
+        }
+        private class NFWinUserAnimateWindowConstnats
+        {
+            public const int AW_HOR_POSITIVE = 0x00000001;
+            public const int AW_HOR_NEGATIVE = 0x00000002;
+            public const int AW_VER_POSITIVE = 0x00000004;
+            public const int AW_VER_NEGATIVE = 0x00000008;
+            public const int AW_CENTER = 0x00000010;
+            public const int AW_HIDE = 0x00010000;
+            public const int AW_ACTIVATE = 0x00020000;
+            public const int AW_SLIDE = 0x00040000;
+            public const int AW_BLEND = 0x00080000;
         }
     }
 }
