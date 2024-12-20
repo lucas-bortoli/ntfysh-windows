@@ -75,7 +75,7 @@ namespace ntfysh_client
             
             //notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
             //this.notificationDialog.IsVisible = true;
-            this.notificationDialog.ShowNotification(finalTitle, e.Message);
+            this.notificationDialog.ShowNotification(finalTitle, e.Message, (int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds);
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)

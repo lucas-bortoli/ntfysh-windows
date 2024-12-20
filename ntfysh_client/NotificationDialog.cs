@@ -20,6 +20,8 @@ namespace ntfysh_client
 
         private const int ScreenMargin = 20;
 
+        private System.Timers.Timer? timer = null;
+
         private void SetWindowPosition()
         {
             int workingtop = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
@@ -31,6 +33,7 @@ namespace ntfysh_client
 
         protected override void SetVisibleCore(bool value)
         {
+
             //base.SetVisibleCore(false);
             this.SetWindowPosition();
             if (value)
@@ -41,8 +44,43 @@ namespace ntfysh_client
             base.SetVisibleCore(value);
         }
 
-        public void ShowNotification(string title, string message)
+        private void ui_hide_window(object? sender, EventArgs e)
         {
+            AnimateWindow(this.Handle, 250, 0x00040000 | 0x00000004 | 0x00010000);
+            this.IsVisible = false;
+        }
+
+        private void handleTimeout(object? sender, EventArgs e)
+        {
+            if (this.timer != null)
+            {
+                this.timer.Stop();
+                this.timer.Dispose();
+                this.timer = null;
+            }
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => this.ui_hide_window(sender, e)));
+            }
+            else
+            {
+                this.ui_hide_window(sender, e);
+            }
+        }
+
+        public void ShowNotification(string title, string message, int timeout_ms=-1)
+        {
+            if (this.timer != null)
+            {
+                this.timer.Stop();
+                this.timer.Dispose();
+            }
+            if (timeout_ms > 0)
+            {
+                this.timer = new System.Timers.Timer(timeout_ms);
+                timer.Elapsed += handleTimeout;
+                this.timer.Start();
+            }
             this.tbTitle.Text = title;
             this.tbMessage.Text = message;
             this.Show();
@@ -57,13 +95,13 @@ namespace ntfysh_client
 
         protected override void OnShown(EventArgs e)
         {
-
             base.OnShown(e);
         }
 
         public NotificationDialog()
         {
             this.IsVisible = false;
+            this.TopMost = true;
             InitializeComponent();
             InitializeWindowHidden();
         }
@@ -78,6 +116,7 @@ namespace ntfysh_client
 
         private void btnClose_Click(object sender, EventArgs e)
         {
+            // immediate
             this.IsVisible = false;
         }
     }

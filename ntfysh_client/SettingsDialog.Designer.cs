@@ -84,7 +84,7 @@ namespace ntfysh_client
             timeoutLabel.Name = "timeoutLabel";
             timeoutLabel.Size = new System.Drawing.Size(488, 15);
             timeoutLabel.TabIndex = 3;
-            timeoutLabel.Text = "Notification Toast Timeout (seconds, may be ignored by OS based on accessibility settings):";
+            timeoutLabel.Text = "Notification Toast Timeout (seconds, use -1 to require closing notification):";
             // 
             // timeout
             // 
