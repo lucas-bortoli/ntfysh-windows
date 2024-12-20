@@ -35,24 +35,34 @@
             // 
             // tbTitle
             // 
-            tbTitle.Location = new System.Drawing.Point(12, 58);
+            tbTitle.BackColor = System.Drawing.SystemColors.ControlDark;
+            tbTitle.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            tbTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            tbTitle.Location = new System.Drawing.Point(12, 19);
             tbTitle.Name = "tbTitle";
             tbTitle.ReadOnly = true;
-            tbTitle.Size = new System.Drawing.Size(725, 23);
+            tbTitle.Size = new System.Drawing.Size(725, 32);
             tbTitle.TabIndex = 0;
             // 
             // button1
             // 
+            button1.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            button1.ForeColor = System.Drawing.SystemColors.ButtonFace;
             button1.Location = new System.Drawing.Point(759, 7);
             button1.Name = "button1";
             button1.Size = new System.Drawing.Size(29, 38);
             button1.TabIndex = 1;
             button1.Text = "x";
-            button1.UseVisualStyleBackColor = true;
+            button1.UseVisualStyleBackColor = false;
             button1.Click += btnClose_Click;
             // 
             // tbMessage
             // 
+            tbMessage.BackColor = System.Drawing.SystemColors.ControlDark;
+            tbMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            tbMessage.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             tbMessage.Location = new System.Drawing.Point(12, 97);
             tbMessage.Multiline = true;
             tbMessage.Name = "tbMessage";
