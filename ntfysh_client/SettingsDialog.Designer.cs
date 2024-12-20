@@ -90,6 +90,7 @@ namespace ntfysh_client
             // 
             timeout.Location = new System.Drawing.Point(13, 28);
             timeout.Maximum = new decimal(new int[] { -1981284353, -1966660860, 0, 0 });
+            timeout.Minimum = new decimal(new int[] { 1, 0, 0, int.MinValue });
             timeout.Name = "timeout";
             timeout.Size = new System.Drawing.Size(506, 23);
             timeout.TabIndex = 4;
