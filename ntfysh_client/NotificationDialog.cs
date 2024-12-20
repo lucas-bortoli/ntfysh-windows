@@ -40,6 +40,7 @@ namespace ntfysh_client
 
         public NotificationDialog()
         {
+            this.ShowInTaskbar = false;
             this.IsVisible = false;
             this.TopMost = true;
             InitializeComponent();
