@@ -30,7 +30,7 @@
         {
             tbTitle = new System.Windows.Forms.TextBox();
             button1 = new System.Windows.Forms.Button();
-            tbMessage = new System.Windows.Forms.TextBox();
+            tbMessage = new System.Windows.Forms.RichTextBox();
             iconBox = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)iconBox).BeginInit();
             SuspendLayout();
@@ -65,12 +65,12 @@
             tbMessage.BackColor = System.Drawing.SystemColors.ControlDark;
             tbMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
             tbMessage.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            tbMessage.Location = new System.Drawing.Point(12, 97);
-            tbMessage.Multiline = true;
+            tbMessage.Location = new System.Drawing.Point(12, 57);
             tbMessage.Name = "tbMessage";
             tbMessage.ReadOnly = true;
-            tbMessage.Size = new System.Drawing.Size(725, 253);
+            tbMessage.Size = new System.Drawing.Size(776, 213);
             tbMessage.TabIndex = 2;
+            tbMessage.Text = "";
             // 
             // iconBox
             // 
@@ -85,7 +85,7 @@
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.SystemColors.ControlDark;
-            ClientSize = new System.Drawing.Size(800, 450);
+            ClientSize = new System.Drawing.Size(800, 289);
             Controls.Add(iconBox);
             Controls.Add(tbMessage);
             Controls.Add(button1);
@@ -102,7 +102,7 @@
 
         private System.Windows.Forms.TextBox tbTitle;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox tbMessage;
+        private System.Windows.Forms.RichTextBox tbMessage;
         private System.Windows.Forms.PictureBox iconBox;
     }
 }
