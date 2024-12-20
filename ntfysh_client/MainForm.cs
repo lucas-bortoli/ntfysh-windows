@@ -16,6 +16,7 @@ namespace ntfysh_client
         private readonly NotificationListener _notificationListener;
         private bool _startInTray;
         private bool _trueExit;
+        private NotificationDialog notificationDialog;
 
         public MainForm(NotificationListener notificationListener, bool startInTray = false)
         {
@@ -32,6 +33,8 @@ namespace ntfysh_client
         {
             LoadSettings();
             LoadTopics();
+
+            this.notificationDialog = new NotificationDialog();
         }
 
         protected override void SetVisibleCore(bool value)
@@ -70,7 +73,9 @@ namespace ntfysh_client
 
             string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
             
-            notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
+            //notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
+            //this.notificationDialog.IsVisible = true;
+            this.notificationDialog.ShowNotification(finalTitle, e.Message);
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
