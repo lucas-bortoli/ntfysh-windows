@@ -8,7 +8,7 @@ namespace ntfysh_client
         public decimal Timeout
         {
             get => timeout.Value;
-            set => timeout.Value = Math.Max(value, timeout.Minimum); // Ensure value is within bounds despite our changing minimum
+            set => timeout.Value = value;
         }
 
         public decimal ReconnectAttempts
@@ -78,7 +78,6 @@ namespace ntfysh_client
         {
             groupCustomNotificationSettings.Enabled = useCustomTrayNotifications.Checked;
             timeoutLabel.Text = useCustomTrayNotifications.Checked ? _customNotificationsTimeout : _windowsNotificationsTimeout;
-            timeout.Minimum = useCustomTrayNotifications.Checked ? -1 : 0;
         }
 
         private void UseCustomTrayNotifications_CheckedChanged(object sender, EventArgs e)
@@ -87,6 +86,6 @@ namespace ntfysh_client
         }
 
         private const string _windowsNotificationsTimeout = "Notification Toast Timeout (seconds, may be ignored by OS based on accessibility settings):";
-        private const string _customNotificationsTimeout = "Notification Toast Timeout (seconds, use -1 to require closing notification):";
+        private const string _customNotificationsTimeout = "Notification Toast Timeout (seconds, use 0 to require closing notification):";
     }
 }
