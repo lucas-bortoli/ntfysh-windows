@@ -21,16 +21,6 @@ namespace ntfysh_client
         private System.Windows.Forms.Timer? _updateTimer = null;
         private Stopwatch? _shownStopwatch = null;
         private ToolTipIcon? _icon;
-        private int _progress_value = 0;
-        private int progress
-        {
-            get { return _progress_value; }
-            set
-            {
-                _progress_value = value;
-                progressBar1.Value = value;
-            }
-        }
 
         public bool IsVisible
         {
@@ -87,7 +77,7 @@ namespace ntfysh_client
 
                 if (showTimeOutBar)
                 {
-                    progress = 100;
+                    progressBar1.Value = 100;
                     _updateTimer = new System.Windows.Forms.Timer();
                     _updateTimer.Interval = 100;
                     _updateTimer.Tick += UpdateProgress;
@@ -121,7 +111,7 @@ namespace ntfysh_client
         {
             if (_shownStopwatch is null) return;
 
-            progress = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
+            progressBar1.Value = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
             lbTimeout.Text = $"{(int)(_timeout - _shownStopwatch.ElapsedMilliseconds) / 1000}";
         }
 
