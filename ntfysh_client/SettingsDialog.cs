@@ -61,7 +61,7 @@ namespace ntfysh_client
         public SettingsDialog()
         {
             InitializeComponent();
-            setNotificationsUIElements();
+            SetNotificationsUIElements();
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -74,16 +74,16 @@ namespace ntfysh_client
             DialogResult = DialogResult.Cancel;
         }
 
-        private void setNotificationsUIElements()
+        private void SetNotificationsUIElements()
         {
             groupCustomNotificationSettings.Enabled = useCustomTrayNotifications.Checked;
             timeoutLabel.Text = useCustomTrayNotifications.Checked ? _customNotificationsTimeout : _windowsNotificationsTimeout;
             timeout.Minimum = useCustomTrayNotifications.Checked ? -1 : 0;
         }
 
-        private void useCustomTrayNotifications_CheckedChanged(object sender, EventArgs e)
+        private void UseCustomTrayNotifications_CheckedChanged(object sender, EventArgs e)
         {
-            setNotificationsUIElements();
+            SetNotificationsUIElements();
         }
 
         private const string _windowsNotificationsTimeout = "Notification Toast Timeout (seconds, may be ignored by OS based on accessibility settings):";

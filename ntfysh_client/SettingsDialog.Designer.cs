@@ -160,7 +160,7 @@ namespace ntfysh_client
             useCustomTrayNotifications.TabStop = true;
             useCustomTrayNotifications.Text = "Use ntfysh-windows custom tray notifications";
             useCustomTrayNotifications.UseVisualStyleBackColor = true;
-            useCustomTrayNotifications.CheckedChanged += useCustomTrayNotifications_CheckedChanged;
+            useCustomTrayNotifications.CheckedChanged += UseCustomTrayNotifications_CheckedChanged;
             // 
             // useNativeWindowsNotifications
             // 
