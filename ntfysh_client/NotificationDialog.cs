@@ -47,7 +47,7 @@ namespace ntfysh_client
             InitializeWindowHidden();
         }
 
-        public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null)
+        public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null, bool showTimeOutBar = true, bool showInDarkMode = true)
         {
             if (this.IsVisible)
             {

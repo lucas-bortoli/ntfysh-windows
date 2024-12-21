@@ -79,7 +79,14 @@ namespace ntfysh_client
             }
             else
             {
-                this.notificationDialog.ShowNotification(finalTitle, e.Message, (int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, priorityIcon);
+                this.notificationDialog.ShowNotification(
+                    title: finalTitle, 
+                    message: e.Message, 
+                    timeout_ms: (int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, 
+                    icon: priorityIcon,
+                    showTimeOutBar: Program.Settings.CustomTrayNotificationsShowTimeoutBar
+                    showInDarkMode: Program.Settings.CustomTrayNotificationsShowInDarkMode
+                );
             }
         }
 
