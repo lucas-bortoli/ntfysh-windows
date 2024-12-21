@@ -15,7 +15,7 @@ namespace ntfysh_client
 
         private const int ScreenMargin = 20;
 
-        private int _timeout = 0;
+        private int _timeoutSeconds = 0;
         private System.Timers.Timer? _displayTimeoutTimer = null;
         private System.Windows.Forms.Timer? _updateTimer = null;
         private Stopwatch? _shownStopwatch = null;
@@ -33,7 +33,7 @@ namespace ntfysh_client
             InitializeWindowHidden();
         }
 
-        public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null, bool showTimeOutBar = true, bool showInDarkMode = true)
+        public void ShowNotification(string title, string message, int timeoutSeconds = 0, ToolTipIcon? icon = null, bool showTimeOutBar = true, bool showInDarkMode = true)
         {
             if (Visible)
             {
@@ -71,9 +71,9 @@ namespace ntfysh_client
                 _updateTimer.Dispose();
             }
 
-            if (timeout_ms > 0)
+            if (timeoutSeconds > 0)
             {
-                _displayTimeoutTimer = new System.Timers.Timer(timeout_ms);
+                _displayTimeoutTimer = new System.Timers.Timer(timeoutSeconds * 1000);
                 _displayTimeoutTimer.Elapsed += HandleTimeout;
                 _displayTimeoutTimer.Start();
 
@@ -90,7 +90,7 @@ namespace ntfysh_client
 
                     ProgressBar1.Visible = true;
                     LblTimeout.Visible = true;
-                    _timeout = timeout_ms;
+                    _timeoutSeconds = timeoutSeconds;
                 }
                 else
                 {
@@ -138,8 +138,8 @@ namespace ntfysh_client
         {
             if (_shownStopwatch is null) return;
 
-            ProgressBar1.Value = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
-            LblTimeout.Text = $"{(int)(_timeout - _shownStopwatch.ElapsedMilliseconds) / 1000}";
+            ProgressBar1.Value = (_timeoutSeconds - _shownStopwatch.Elapsed.Seconds) * 100 / _timeoutSeconds;
+            LblTimeout.Text = $"{_timeoutSeconds - _shownStopwatch.Elapsed.Seconds}";
         }
 
         protected override void SetVisibleCore(bool value)
