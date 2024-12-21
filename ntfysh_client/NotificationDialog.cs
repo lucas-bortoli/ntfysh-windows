@@ -39,10 +39,10 @@ namespace ntfysh_client
             }
 
             // setup data
-            iconBox.Image = (icon is null) ? null : ConvertToolTipIconToImage(icon.Value);
+            IconBox.Image = (icon is null) ? null : ConvertToolTipIconToImage(icon.Value);
 
-            tbTitle.Text = title;
-            tbMessage.Text = message;
+            TxBTitle.Text = title;
+            TxBMessage.Text = message;
 
             // setup timers
             if (_displayTimeoutTimer != null)
@@ -65,7 +65,7 @@ namespace ntfysh_client
 
                 if (showTimeOutBar)
                 {
-                    progressBar1.Value = 100;
+                    ProgressBar1.Value = 100;
                     _updateTimer = new System.Windows.Forms.Timer();
                     _updateTimer.Interval = 100;
                     _updateTimer.Tick += UpdateProgress;
@@ -74,20 +74,20 @@ namespace ntfysh_client
                     _shownStopwatch = new Stopwatch();
                     _shownStopwatch.Start();
 
-                    progressBar1.Visible = true;
-                    lbTimeout.Visible = true;
+                    ProgressBar1.Visible = true;
+                    LblTimeout.Visible = true;
                     _timeout = timeout_ms;
                 }
                 else
                 {
-                    progressBar1.Visible = false;
-                    lbTimeout.Visible = false;
+                    ProgressBar1.Visible = false;
+                    LblTimeout.Visible = false;
                 }
             }
             else
             {
-                progressBar1.Visible = false;
-                lbTimeout.Visible = false;
+                ProgressBar1.Visible = false;
+                LblTimeout.Visible = false;
             }
 
             // ok, show the window
@@ -99,8 +99,8 @@ namespace ntfysh_client
         {
             if (_shownStopwatch is null) return;
 
-            progressBar1.Value = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
-            lbTimeout.Text = $"{(int)(_timeout - _shownStopwatch.ElapsedMilliseconds) / 1000}";
+            ProgressBar1.Value = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
+            LblTimeout.Text = $"{(int)(_timeout - _shownStopwatch.ElapsedMilliseconds) / 1000}";
         }
 
         protected override void SetVisibleCore(bool value)
@@ -174,7 +174,7 @@ namespace ntfysh_client
             Opacity = 1;
         }
 
-        private void btnClose_Click(object sender, EventArgs e)
+        private void ButtonClose_ClickHandler(object sender, EventArgs e)
         {
             // don't animate, immediately "close"
             Visible = false;
@@ -202,15 +202,15 @@ namespace ntfysh_client
                 // on a background thread, so invoke on the UI thread
                 Invoke(new Action(() =>
                 {
-                    lbTimeout.Visible = false;
-                    progressBar1.Visible = false;
+                    LblTimeout.Visible = false;
+                    ProgressBar1.Visible = false;
                 }));
             }
             else
             {
                 // in the UI thread, invoke directly
-                lbTimeout.Visible = false;
-                progressBar1.Visible = false;
+                LblTimeout.Visible = false;
+                ProgressBar1.Visible = false;
             }
 
             if (_displayTimeoutTimer != null) // check if the timer has already been disposed

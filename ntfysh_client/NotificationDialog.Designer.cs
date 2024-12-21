@@ -28,90 +28,90 @@
         /// </summary>
         private void InitializeComponent()
         {
-            tbTitle = new System.Windows.Forms.TextBox();
-            button1 = new System.Windows.Forms.Button();
-            tbMessage = new System.Windows.Forms.RichTextBox();
-            iconBox = new System.Windows.Forms.PictureBox();
-            progressBar1 = new System.Windows.Forms.ProgressBar();
-            lbTimeout = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)iconBox).BeginInit();
+            TxBTitle = new System.Windows.Forms.TextBox();
+            ButtonClose = new System.Windows.Forms.Button();
+            TxBMessage = new System.Windows.Forms.RichTextBox();
+            IconBox = new System.Windows.Forms.PictureBox();
+            ProgressBar1 = new System.Windows.Forms.ProgressBar();
+            LblTimeout = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)IconBox).BeginInit();
             SuspendLayout();
             // 
-            // tbTitle
+            // TxBTitle
             // 
-            tbTitle.BackColor = System.Drawing.SystemColors.ControlDark;
-            tbTitle.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            tbTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            tbTitle.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            tbTitle.Location = new System.Drawing.Point(54, 13);
-            tbTitle.Name = "tbTitle";
-            tbTitle.ReadOnly = true;
-            tbTitle.Size = new System.Drawing.Size(683, 32);
-            tbTitle.TabIndex = 0;
-            tbTitle.MouseDown += window_MouseDown;
+            TxBTitle.BackColor = System.Drawing.SystemColors.ControlDark;
+            TxBTitle.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            TxBTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            TxBTitle.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            TxBTitle.Location = new System.Drawing.Point(54, 13);
+            TxBTitle.Name = "TxBTitle";
+            TxBTitle.ReadOnly = true;
+            TxBTitle.Size = new System.Drawing.Size(683, 32);
+            TxBTitle.TabIndex = 0;
+            TxBTitle.MouseDown += window_MouseDown;
             // 
-            // button1
+            // ButtonClose
             // 
-            button1.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            button1.FlatAppearance.BorderColor = System.Drawing.Color.White;
-            button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Silver;
-            button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            button1.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            button1.Location = new System.Drawing.Point(759, 7);
-            button1.Name = "button1";
-            button1.Size = new System.Drawing.Size(29, 38);
-            button1.TabIndex = 1;
-            button1.Text = "X";
-            button1.UseVisualStyleBackColor = false;
-            button1.Click += btnClose_Click;
+            ButtonClose.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            ButtonClose.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            ButtonClose.FlatAppearance.BorderColor = System.Drawing.Color.White;
+            ButtonClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Silver;
+            ButtonClose.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            ButtonClose.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            ButtonClose.Location = new System.Drawing.Point(759, 7);
+            ButtonClose.Name = "ButtonClose";
+            ButtonClose.Size = new System.Drawing.Size(29, 38);
+            ButtonClose.TabIndex = 1;
+            ButtonClose.Text = "X";
+            ButtonClose.UseVisualStyleBackColor = false;
+            ButtonClose.Click += ButtonClose_ClickHandler;
             // 
-            // tbMessage
+            // TxBMessage
             // 
-            tbMessage.BackColor = System.Drawing.SystemColors.ControlDark;
-            tbMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            tbMessage.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            tbMessage.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            tbMessage.Location = new System.Drawing.Point(12, 57);
-            tbMessage.Name = "tbMessage";
-            tbMessage.ReadOnly = true;
-            tbMessage.Size = new System.Drawing.Size(776, 191);
-            tbMessage.TabIndex = 2;
-            tbMessage.Text = "";
-            tbMessage.MouseDown += window_MouseDown;
+            TxBMessage.BackColor = System.Drawing.SystemColors.ControlDark;
+            TxBMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            TxBMessage.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            TxBMessage.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            TxBMessage.Location = new System.Drawing.Point(12, 57);
+            TxBMessage.Name = "TxBMessage";
+            TxBMessage.ReadOnly = true;
+            TxBMessage.Size = new System.Drawing.Size(776, 191);
+            TxBMessage.TabIndex = 2;
+            TxBMessage.Text = "";
+            TxBMessage.MouseDown += window_MouseDown;
             // 
-            // iconBox
+            // IconBox
             // 
-            iconBox.Location = new System.Drawing.Point(12, 12);
-            iconBox.Name = "iconBox";
-            iconBox.Size = new System.Drawing.Size(36, 39);
-            iconBox.TabIndex = 3;
-            iconBox.TabStop = false;
+            IconBox.Location = new System.Drawing.Point(12, 12);
+            IconBox.Name = "IconBox";
+            IconBox.Size = new System.Drawing.Size(36, 39);
+            IconBox.TabIndex = 3;
+            IconBox.TabStop = false;
             // 
-            // progressBar1
+            // ProgressBar1
             // 
-            progressBar1.BackColor = System.Drawing.SystemColors.ControlDarkDark;
-            progressBar1.Enabled = false;
-            progressBar1.ForeColor = System.Drawing.SystemColors.WindowFrame;
-            progressBar1.Location = new System.Drawing.Point(70, 254);
-            progressBar1.MarqueeAnimationSpeed = 1;
-            progressBar1.Name = "progressBar1";
-            progressBar1.Size = new System.Drawing.Size(718, 23);
-            progressBar1.Step = 1;
-            progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            progressBar1.TabIndex = 4;
-            progressBar1.Value = 100;
+            ProgressBar1.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            ProgressBar1.Enabled = false;
+            ProgressBar1.ForeColor = System.Drawing.SystemColors.WindowFrame;
+            ProgressBar1.Location = new System.Drawing.Point(70, 254);
+            ProgressBar1.MarqueeAnimationSpeed = 1;
+            ProgressBar1.Name = "ProgressBar1";
+            ProgressBar1.Size = new System.Drawing.Size(718, 23);
+            ProgressBar1.Step = 1;
+            ProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            ProgressBar1.TabIndex = 4;
+            ProgressBar1.Value = 100;
             // 
-            // lbTimeout
+            // LblTimeout
             // 
-            lbTimeout.AutoSize = true;
-            lbTimeout.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            lbTimeout.Location = new System.Drawing.Point(21, 254);
-            lbTimeout.Name = "lbTimeout";
-            lbTimeout.Size = new System.Drawing.Size(43, 17);
-            lbTimeout.TabIndex = 5;
-            lbTimeout.Text = "label1";
-            lbTimeout.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            LblTimeout.AutoSize = true;
+            LblTimeout.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            LblTimeout.Location = new System.Drawing.Point(21, 254);
+            LblTimeout.Name = "LblTimeout";
+            LblTimeout.Size = new System.Drawing.Size(43, 17);
+            LblTimeout.TabIndex = 5;
+            LblTimeout.Text = "label1";
+            LblTimeout.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // NotificationDialog
             // 
@@ -119,28 +119,28 @@
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.SystemColors.ControlDark;
             ClientSize = new System.Drawing.Size(800, 289);
-            Controls.Add(lbTimeout);
-            Controls.Add(progressBar1);
-            Controls.Add(iconBox);
-            Controls.Add(tbMessage);
-            Controls.Add(button1);
-            Controls.Add(tbTitle);
+            Controls.Add(LblTimeout);
+            Controls.Add(ProgressBar1);
+            Controls.Add(IconBox);
+            Controls.Add(TxBMessage);
+            Controls.Add(ButtonClose);
+            Controls.Add(TxBTitle);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             Name = "NotificationDialog";
             Text = "NotificationDialog";
             Click += window_MouseDown;
-            ((System.ComponentModel.ISupportInitialize)iconBox).EndInit();
+            ((System.ComponentModel.ISupportInitialize)IconBox).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.TextBox tbTitle;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.RichTextBox tbMessage;
-        private System.Windows.Forms.PictureBox iconBox;
-        private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Label lbTimeout;
+        private System.Windows.Forms.TextBox TxBTitle;
+        private System.Windows.Forms.Button ButtonClose;
+        private System.Windows.Forms.RichTextBox TxBMessage;
+        private System.Windows.Forms.PictureBox IconBox;
+        private System.Windows.Forms.ProgressBar ProgressBar1;
+        private System.Windows.Forms.Label LblTimeout;
     }
 }
