@@ -122,6 +122,7 @@ namespace ntfysh_client
 
             // this one is not "hiding"
             ButtonClose.BackColor = _theme.ControlBackGroundColor;
+            ButtonClose.ForeColor = _theme.BackgroundColor;
             // handle mouse over
             ButtonClose.FlatAppearance.MouseOverBackColor = _theme.ControlMouseOverBackgroundColor;
 
@@ -131,7 +132,6 @@ namespace ntfysh_client
             TxBMessage.ForeColor = _theme.ForegroundColor;
             LblTimeout.ForeColor = _theme.ForegroundColor;
             ProgressBar1.ForeColor = _theme.ForegroundColor;
-            ButtonClose.ForeColor = _theme.ForegroundColor;
         }
 
         private void UpdateProgress(object? sender, EventArgs e)
