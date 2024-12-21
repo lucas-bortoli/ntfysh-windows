@@ -214,7 +214,7 @@ namespace ntfysh_client
 
         private void btnClose_Click(object sender, EventArgs e)
         {
-            // immediate
+            // don't animate, immediately "close"
             IsVisible = false;
         }
 
