@@ -2,8 +2,6 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.ComponentModel;
-using Microsoft.Win32;
 using System.Diagnostics;
 using ntfysh_client.Themes;
 
