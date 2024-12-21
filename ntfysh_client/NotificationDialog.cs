@@ -80,18 +80,25 @@ namespace ntfysh_client
                 displayTimeoutTimer.Elapsed += handleTimeout;
                 this.displayTimeoutTimer.Start();
 
-                this.progress = 100;
-                this.updateTimer = new System.Windows.Forms.Timer();
-                updateTimer.Interval = 100;
-                this.updateTimer.Tick += this.UpdateProgress;
-                this.updateTimer.Start();
+                if (showTimeOutBar)
+                {
+                    this.progress = 100;
+                    this.updateTimer = new System.Windows.Forms.Timer();
+                    updateTimer.Interval = 100;
+                    this.updateTimer.Tick += this.UpdateProgress;
+                    this.updateTimer.Start();
 
-                this.shownStopwatch = new Stopwatch();
-                this.shownStopwatch.Start();
+                    this.shownStopwatch = new Stopwatch();
+                    this.shownStopwatch.Start();
 
-                this.progressBar1.Visible = true;
-                this.lbTimeout.Visible = true;
-                this._timeout = timeout_ms;
+                    this.progressBar1.Visible = true;
+                    this.lbTimeout.Visible = true;
+                    this._timeout = timeout_ms;
+                } else
+                {
+                    this.progressBar1.Visible = false;
+                    this.lbTimeout.Visible = false;
+                }
             }
             else
             {
