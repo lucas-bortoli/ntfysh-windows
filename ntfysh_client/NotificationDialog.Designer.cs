@@ -54,9 +54,9 @@
             // 
             ButtonClose.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             ButtonClose.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            ButtonClose.FlatAppearance.BorderColor = System.Drawing.Color.White;
-            ButtonClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Silver;
-            ButtonClose.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            ButtonClose.FlatAppearance.BorderSize = 0;
+            ButtonClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.DimGray;
+            ButtonClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             ButtonClose.ForeColor = System.Drawing.SystemColors.ButtonFace;
             ButtonClose.Location = new System.Drawing.Point(759, 7);
             ButtonClose.Name = "ButtonClose";
