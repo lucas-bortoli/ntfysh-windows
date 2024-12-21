@@ -22,16 +22,10 @@ namespace ntfysh_client
         private Stopwatch? _shownStopwatch = null;
         private ToolTipIcon? _icon;
 
-        public bool IsVisible
-        {
-            get { return Visible; }
-            set { Visible = value; }
-        }
-
         public NotificationDialog()
         {
             ShowInTaskbar = false;
-            IsVisible = false;
+            Visible = false;
             TopMost = true;
             InitializeComponent();
             InitializeWindowHidden();
@@ -39,7 +33,7 @@ namespace ntfysh_client
 
         public void ShowNotification(string title, string message, int timeout_ms = -1, ToolTipIcon? icon = null, bool showTimeOutBar = true, bool showInDarkMode = true)
         {
-            if (IsVisible)
+            if (Visible)
             {
                 // close the current notification
                 HandleTimeout(null, null);
@@ -151,7 +145,7 @@ namespace ntfysh_client
                 flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_POSITIVE | NFWinUserAnimateWindowConstnats.AW_HIDE
             );
 
-            IsVisible = false;
+            Visible = false;
         }
 
         private void HandleTimeout(object? sender, EventArgs? e)
@@ -182,14 +176,14 @@ namespace ntfysh_client
         {
             Opacity = 0;
             ShowNotification("Title", "Message");
-            IsVisible = false;
+            Visible = false;
             Opacity = 1;
         }
 
         private void btnClose_Click(object sender, EventArgs e)
         {
             // don't animate, immediately "close"
-            IsVisible = false;
+            Visible = false;
         }
 
         private class NFWinUserAnimateWindowConstnats
