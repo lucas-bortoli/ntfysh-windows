@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.ComponentModel;
 using Microsoft.Win32;
 using System.Diagnostics;
+using ntfysh_client.Themes;
 
 
 namespace ntfysh_client
@@ -20,6 +21,10 @@ namespace ntfysh_client
         private System.Timers.Timer? _displayTimeoutTimer = null;
         private System.Windows.Forms.Timer? _updateTimer = null;
         private Stopwatch? _shownStopwatch = null;
+
+        private BaseTheme _darkModeTheme = new DarkModeTheme();
+        private BaseTheme _defaultTheme = new DefaultTheme();
+        private BaseTheme? _theme = null;
 
         public NotificationDialog()
         {
@@ -37,6 +42,17 @@ namespace ntfysh_client
                 // close the current notification
                 HandleTimeout(null, null);
             }
+
+            if(showInDarkMode)
+            {
+                _theme = _darkModeTheme;
+            }
+            else
+            {
+                _theme = _defaultTheme;
+            }
+
+            ApplyTheme();
 
             // setup data
             IconBox.Image = (icon is null) ? null : ConvertToolTipIconToImage(icon.Value);
@@ -93,6 +109,31 @@ namespace ntfysh_client
             // ok, show the window
             Show();
             SetWindowPosition();
+        }
+
+        private void ApplyTheme()
+        {
+            if (_theme is null) _theme = _defaultTheme;
+
+            // back colors
+            BackColor = _theme.BackgroundColor;
+            TxBTitle.BackColor = _theme.BackgroundColor;
+            TxBMessage.BackColor = _theme.BackgroundColor;
+            LblTimeout.BackColor = _theme.BackgroundColor;
+            ProgressBar1.BackColor = _theme.BackgroundColor;
+
+            // this one is not "hiding"
+            ButtonClose.BackColor = _theme.ControlBackGroundColor;
+            // handle mouse over
+            ButtonClose.FlatAppearance.MouseOverBackColor = _theme.ControlMouseOverBackgroundColor;
+
+            // fore colors
+            ForeColor = _theme.ForegroundColor;
+            TxBTitle.ForeColor = _theme.ForegroundColor;
+            TxBMessage.ForeColor = _theme.ForegroundColor;
+            LblTimeout.ForeColor = _theme.ForegroundColor;
+            ProgressBar1.ForeColor = _theme.ForegroundColor;
+            ButtonClose.ForeColor = _theme.ForegroundColor;
         }
 
         private void UpdateProgress(object? sender, EventArgs e)
