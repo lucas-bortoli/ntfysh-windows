@@ -20,7 +20,6 @@ namespace ntfysh_client
         private System.Timers.Timer? _displayTimeoutTimer = null;
         private System.Windows.Forms.Timer? _updateTimer = null;
         private Stopwatch? _shownStopwatch = null;
-        private ToolTipIcon? _icon;
 
         public NotificationDialog()
         {
@@ -39,13 +38,9 @@ namespace ntfysh_client
                 HandleTimeout(null, null);
             }
 
-            // setup data
-            _icon = icon;
 
-            if (_icon != null)
-            {
-                iconBox.Image = ConvertToolTipIconToImage(_icon.Value);
-            }
+            // setup data
+            iconBox.Image = (icon is null) ? null : ConvertToolTipIconToImage(icon.Value);
 
             tbTitle.Text = title;
             tbMessage.Text = message;
