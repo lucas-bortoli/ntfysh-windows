@@ -8,7 +8,7 @@ namespace ntfysh_client
         public decimal Timeout
         {
             get => timeout.Value;
-            set => timeout.Value = value;
+            set => timeout.Value = Math.Max(value, timeout.Minimum); // Ensure value is within bounds despite our changing minimum
         }
 
         public decimal ReconnectAttempts
@@ -23,9 +23,45 @@ namespace ntfysh_client
             set => reconnectAttemptDelay.Value = value;
         }
 
+        #region: Native vs custom notifications options. Because these are in a group box, these are mutualy exclusive.
+        public bool UseNativeWindowsNotifications
+        {
+            get => useNativeWindowsNotifications.Checked;
+            set
+            {
+                useNativeWindowsNotifications.Checked = value;
+                groupCustomNotificationSettings.Enabled = !value;
+            }
+        }
+
+        public bool UseCustomTrayNotifications
+        {
+            get => useCustomTrayNotifications.Checked;
+            set {
+                useCustomTrayNotifications.Checked = value;
+                groupCustomNotificationSettings.Enabled = value;
+            }
+        }
+        #endregion
+
+        #region: Custom tray notification options
+        public bool CustomTrayNotificationsShowTimeoutBar
+        {
+            get => customNotificationsShowTimeoutBar.Checked;
+            set => customNotificationsShowTimeoutBar.Checked = value;
+        }
+
+        public bool CustomTrayNotificationsShowInDarkMode
+        {
+            get => customNotificationsShowInDarkMode.Checked;
+            set => customNotificationsShowInDarkMode.Checked = value;
+        }
+        #endregion
+
         public SettingsDialog()
         {
             InitializeComponent();
+            setNotificationsUIElements();
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -37,5 +73,20 @@ namespace ntfysh_client
         {
             DialogResult = DialogResult.Cancel;
         }
+
+        private void setNotificationsUIElements()
+        {
+            groupCustomNotificationSettings.Enabled = useCustomTrayNotifications.Checked;
+            timeoutLabel.Text = useCustomTrayNotifications.Checked ? _customNotificationsTimeout : _windowsNotificationsTimeout;
+            timeout.Minimum = useCustomTrayNotifications.Checked ? -1 : 0;
+        }
+
+        private void useCustomTrayNotifications_CheckedChanged(object sender, EventArgs e)
+        {
+            setNotificationsUIElements();
+        }
+
+        private const string _windowsNotificationsTimeout = "Notification Toast Timeout (seconds, may be ignored by OS based on accessibility settings):";
+        private const string _customNotificationsTimeout = "Notification Toast Timeout (seconds, use -1 to require closing notification):";
     }
 }

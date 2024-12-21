@@ -135,10 +135,14 @@ namespace ntfysh_client
             using SettingsDialog dialog = new();
 
             //Load current settings into dialog
-            dialog.Timeout = Program.Settings.Timeout;
             dialog.ReconnectAttempts = Program.Settings.ReconnectAttempts;
             dialog.ReconnectAttemptDelay = Program.Settings.ReconnectAttemptDelay;
-            
+            dialog.UseNativeWindowsNotifications = Program.Settings.UseNativeWindowsNotifications;
+            dialog.UseCustomTrayNotifications = Program.Settings.UseCustomTrayNotifications;
+            dialog.CustomTrayNotificationsShowTimeoutBar = Program.Settings.CustomTrayNotificationsShowTimeoutBar;
+            dialog.CustomTrayNotificationsShowInDarkMode = Program.Settings.CustomTrayNotificationsShowInDarkMode;
+            dialog.Timeout = Program.Settings.Timeout; // set timeout last so bounds are setup before setting value
+
             //Show dialog
             DialogResult result = dialog.ShowDialog();
 
@@ -149,7 +153,11 @@ namespace ntfysh_client
             Program.Settings.Timeout = dialog.Timeout;
             Program.Settings.ReconnectAttempts = dialog.ReconnectAttempts;
             Program.Settings.ReconnectAttemptDelay = dialog.ReconnectAttemptDelay;
-            
+            Program.Settings.UseNativeWindowsNotifications = dialog.UseNativeWindowsNotifications;
+            Program.Settings.UseCustomTrayNotifications = dialog.UseCustomTrayNotifications;
+            Program.Settings.CustomTrayNotificationsShowTimeoutBar = dialog.CustomTrayNotificationsShowTimeoutBar;
+            Program.Settings.CustomTrayNotificationsShowInDarkMode = dialog.CustomTrayNotificationsShowInDarkMode;
+
             //Save new settings persistently
             SaveSettingsToFile();
         }
@@ -301,10 +309,14 @@ namespace ntfysh_client
 
         private SettingsModel GetDefaultSettings() => new()
         {
-            Revision = 1,
+            Revision = 2,
             Timeout = 5,
             ReconnectAttempts = 10,
-            ReconnectAttemptDelay = 3
+            ReconnectAttemptDelay = 3,
+            UseNativeWindowsNotifications = true,
+            UseCustomTrayNotifications = false,
+            CustomTrayNotificationsShowTimeoutBar = true,
+            CustomTrayNotificationsShowInDarkMode = true,
         };
         
         private void MergeSettingsRevisions(SettingsModel older, SettingsModel newer)
@@ -314,6 +326,13 @@ namespace ntfysh_client
             {
                 older.ReconnectAttempts = newer.ReconnectAttempts;
                 older.ReconnectAttemptDelay = newer.ReconnectAttemptDelay;
+            }
+            if (older.Revision < 2)
+            {
+                older.UseNativeWindowsNotifications = newer.UseNativeWindowsNotifications;
+                older.UseCustomTrayNotifications = newer.UseCustomTrayNotifications;
+                older.CustomTrayNotificationsShowTimeoutBar = newer.CustomTrayNotificationsShowTimeoutBar;
+                older.CustomTrayNotificationsShowInDarkMode = newer.CustomTrayNotificationsShowInDarkMode;
             }
 
             //Update the revision
@@ -364,7 +383,7 @@ namespace ntfysh_client
             Program.Settings = settings;
             
             //Check the settings revision. If it is older than the current latest revision, apply the settings defaults missing from previous revision
-            if (Program.Settings.Revision < defaultSettings.ReconnectAttempts)
+            if (Program.Settings.Revision < defaultSettings.Revision)
             {
                 MergeSettingsRevisions(Program.Settings, defaultSettings);
                 SaveSettingsToFile();
