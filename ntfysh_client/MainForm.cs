@@ -16,7 +16,7 @@ namespace ntfysh_client
         private readonly NotificationListener _notificationListener;
         private bool _startInTray;
         private bool _trueExit;
-        private NotificationDialog notificationDialog;
+        private NotificationDialog _notificationDialog;
 
         public MainForm(NotificationListener notificationListener, bool startInTray = false)
         {
@@ -34,7 +34,7 @@ namespace ntfysh_client
             LoadSettings();
             LoadTopics();
 
-            this.notificationDialog = new NotificationDialog();
+            _notificationDialog = new NotificationDialog();
         }
 
         protected override void SetVisibleCore(bool value)
@@ -79,12 +79,12 @@ namespace ntfysh_client
             }
             else
             {
-                this.notificationDialog.ShowNotification(
+                _notificationDialog.ShowNotification(
                     title: finalTitle, 
                     message: e.Message, 
                     timeout_ms: (int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, 
                     icon: priorityIcon,
-                    showTimeOutBar: Program.Settings.CustomTrayNotificationsShowTimeoutBar
+                    showTimeOutBar: Program.Settings.CustomTrayNotificationsShowTimeoutBar,
                     showInDarkMode: Program.Settings.CustomTrayNotificationsShowInDarkMode
                 );
             }
