@@ -52,7 +52,7 @@ namespace ntfysh_client
             if (IsVisible)
             {
                 // close the current notification
-                handleTimeout(null, null);
+                HandleTimeout(null, null);
             }
 
             // setup data
@@ -82,7 +82,7 @@ namespace ntfysh_client
             if (timeout_ms > 0)
             {
                 _displayTimeoutTimer = new System.Timers.Timer(timeout_ms);
-                _displayTimeoutTimer.Elapsed += handleTimeout;
+                _displayTimeoutTimer.Elapsed += HandleTimeout;
                 _displayTimeoutTimer.Start();
 
                 if (showTimeOutBar)
@@ -160,7 +160,7 @@ namespace ntfysh_client
             Left = workingleft - NotificationDialog.ScreenMargin;
         }
 
-        private void ui_hide_window(object? sender, EventArgs? e)
+        private void UIThreadAnimatedHideWindow(object? sender, EventArgs? e)
         {
 
             AnimateWindow(
@@ -172,19 +172,19 @@ namespace ntfysh_client
             IsVisible = false;
         }
 
-        private void handleTimeout(object? sender, EventArgs? e)
+        private void HandleTimeout(object? sender, EventArgs? e)
         {
-            cancelTimer();
+            CancelTimer();
 
             if (InvokeRequired)
             {
                 // on a background thread, so invoke on the UI thread
-                Invoke(new Action(() => ui_hide_window(sender, e)));
+                Invoke(new Action(() => UIThreadAnimatedHideWindow(sender, e)));
             }
             else
             {
                 // in the UI thread, invoke directly
-                ui_hide_window(sender, e);
+                UIThreadAnimatedHideWindow(sender, e);
             }
         }
 
@@ -233,10 +233,10 @@ namespace ntfysh_client
 
         private void window_MouseDown(object sender, EventArgs e)
         {
-            cancelTimer();
+            CancelTimer();
         }
 
-        private void cancelTimer()
+        private void CancelTimer()
         {
             if (InvokeRequired)
             {
