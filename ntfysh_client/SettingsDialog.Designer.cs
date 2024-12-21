@@ -38,7 +38,7 @@ namespace ntfysh_client
             reconnectAttemptsLabel = new System.Windows.Forms.Label();
             reconnectAttemptDelay = new System.Windows.Forms.NumericUpDown();
             reconnectAttemptDelayLabel = new System.Windows.Forms.Label();
-            groupBox1 = new System.Windows.Forms.GroupBox();
+            nativeVersusCustomNotificationsGroupBox = new System.Windows.Forms.GroupBox();
             useCustomTrayNotifications = new System.Windows.Forms.RadioButton();
             useNativeWindowsNotifications = new System.Windows.Forms.RadioButton();
             groupCustomNotificationSettings = new System.Windows.Forms.GroupBox();
@@ -49,7 +49,7 @@ namespace ntfysh_client
             ((System.ComponentModel.ISupportInitialize)timeout).BeginInit();
             ((System.ComponentModel.ISupportInitialize)reconnectAttempts).BeginInit();
             ((System.ComponentModel.ISupportInitialize)reconnectAttemptDelay).BeginInit();
-            groupBox1.SuspendLayout();
+            nativeVersusCustomNotificationsGroupBox.SuspendLayout();
             groupCustomNotificationSettings.SuspendLayout();
             SuspendLayout();
             // 
@@ -140,15 +140,15 @@ namespace ntfysh_client
             reconnectAttemptDelayLabel.TabIndex = 7;
             reconnectAttemptDelayLabel.Text = "Delay between attempts (seconds, requires restart):";
             // 
-            // groupBox1
+            // nativeVersusCustomNotificationsGroupBox
             // 
-            groupBox1.Controls.Add(useCustomTrayNotifications);
-            groupBox1.Controls.Add(useNativeWindowsNotifications);
-            groupBox1.Location = new System.Drawing.Point(12, 147);
-            groupBox1.Name = "groupBox1";
-            groupBox1.Size = new System.Drawing.Size(506, 67);
-            groupBox1.TabIndex = 9;
-            groupBox1.TabStop = false;
+            nativeVersusCustomNotificationsGroupBox.Controls.Add(useCustomTrayNotifications);
+            nativeVersusCustomNotificationsGroupBox.Controls.Add(useNativeWindowsNotifications);
+            nativeVersusCustomNotificationsGroupBox.Location = new System.Drawing.Point(12, 147);
+            nativeVersusCustomNotificationsGroupBox.Name = "nativeVersusCustomNotificationsGroupBox";
+            nativeVersusCustomNotificationsGroupBox.Size = new System.Drawing.Size(506, 67);
+            nativeVersusCustomNotificationsGroupBox.TabIndex = 9;
+            nativeVersusCustomNotificationsGroupBox.TabStop = false;
             // 
             // useCustomTrayNotifications
             // 
@@ -220,7 +220,7 @@ namespace ntfysh_client
             ClientSize = new System.Drawing.Size(531, 367);
             Controls.Add(label1);
             Controls.Add(groupCustomNotificationSettings);
-            Controls.Add(groupBox1);
+            Controls.Add(nativeVersusCustomNotificationsGroupBox);
             Controls.Add(reconnectAttemptDelay);
             Controls.Add(reconnectAttemptDelayLabel);
             Controls.Add(reconnectAttempts);
@@ -241,8 +241,8 @@ namespace ntfysh_client
             ((System.ComponentModel.ISupportInitialize)timeout).EndInit();
             ((System.ComponentModel.ISupportInitialize)reconnectAttempts).EndInit();
             ((System.ComponentModel.ISupportInitialize)reconnectAttemptDelay).EndInit();
-            groupBox1.ResumeLayout(false);
-            groupBox1.PerformLayout();
+            nativeVersusCustomNotificationsGroupBox.ResumeLayout(false);
+            nativeVersusCustomNotificationsGroupBox.PerformLayout();
             groupCustomNotificationSettings.ResumeLayout(false);
             groupCustomNotificationSettings.PerformLayout();
             ResumeLayout(false);
@@ -260,7 +260,7 @@ namespace ntfysh_client
         private System.Windows.Forms.Label reconnectAttemptsLabel;
         private System.Windows.Forms.NumericUpDown reconnectAttemptDelay;
         private System.Windows.Forms.Label reconnectAttemptDelayLabel;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox nativeVersusCustomNotificationsGroupBox;
         private System.Windows.Forms.RadioButton useCustomTrayNotifications;
         private System.Windows.Forms.RadioButton useNativeWindowsNotifications;
         private System.Windows.Forms.GroupBox groupCustomNotificationSettings;
