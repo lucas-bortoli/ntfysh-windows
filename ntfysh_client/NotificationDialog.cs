@@ -119,10 +119,7 @@ namespace ntfysh_client
 
         private void UpdateProgress(object? sender, EventArgs e)
         {
-            if (_shownStopwatch == null)
-            {
-                return;
-            }
+            if (_shownStopwatch is null) return;
 
             progress = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
             lbTimeout.Text = $"{(int)(_timeout - _shownStopwatch.ElapsedMilliseconds) / 1000}";
@@ -144,11 +141,6 @@ namespace ntfysh_client
             }
 
             base.SetVisibleCore(value);
-        }
-
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
         }
 
         private void SetWindowPosition()
@@ -188,21 +180,13 @@ namespace ntfysh_client
             }
         }
 
-        private Image? ConvertToolTipIconToImage(ToolTipIcon icon)
+        private Image? ConvertToolTipIconToImage(ToolTipIcon icon) => icon switch
         {
-            switch (icon)
-            {
-                case ToolTipIcon.Info:
-                    return SystemIcons.Information.ToBitmap();
-                case ToolTipIcon.Warning:
-                    return SystemIcons.Warning.ToBitmap();
-                case ToolTipIcon.Error:
-                    return SystemIcons.Error.ToBitmap();
-                case ToolTipIcon.None:
-                default:
-                    return null;
-            }
-        }
+            ToolTipIcon.Info => SystemIcons.Information.ToBitmap(),
+            ToolTipIcon.Warning => SystemIcons.Warning.ToBitmap(),
+            ToolTipIcon.Error => SystemIcons.Error.ToBitmap(),
+            _ => null
+        };
 
         private void InitializeWindowHidden()
         {
@@ -231,11 +215,8 @@ namespace ntfysh_client
             public const int AW_BLEND = 0x00080000;
         }
 
-        private void window_MouseDown(object sender, EventArgs e)
-        {
-            CancelTimer();
-        }
-
+        private void window_MouseDown(object sender, EventArgs e) => CancelTimer();
+        
         private void CancelTimer()
         {
             if (InvokeRequired)
