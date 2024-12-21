@@ -38,7 +38,6 @@ namespace ntfysh_client
                 HandleTimeout(null, null);
             }
 
-
             // setup data
             iconBox.Image = (icon is null) ? null : ConvertToolTipIconToImage(icon.Value);
 
@@ -195,7 +194,7 @@ namespace ntfysh_client
         }
 
         private void window_MouseDown(object sender, EventArgs e) => CancelTimer();
-        
+
         private void CancelTimer()
         {
             if (InvokeRequired)
