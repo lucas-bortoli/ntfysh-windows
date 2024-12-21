@@ -79,6 +79,7 @@ namespace ntfysh_client
             }
             else
             {
+
                 _notificationDialog.ShowNotification(
                     title: finalTitle, 
                     message: e.Message, 
@@ -341,6 +342,8 @@ namespace ntfysh_client
                 older.ReconnectAttempts = newer.ReconnectAttempts;
                 older.ReconnectAttemptDelay = newer.ReconnectAttemptDelay;
             }
+
+            //Apply settings introduced in Revision 2 (Native vs custom notifications)
             if (older.Revision < 2)
             {
                 older.UseNativeWindowsNotifications = newer.UseNativeWindowsNotifications;

@@ -54,12 +54,15 @@ namespace ntfysh_client
                 // close the current notification
                 handleTimeout(null, null);
             }
+
             // setup data
             _icon = icon;
+
             if (_icon != null)
             {
                 iconBox.Image = ConvertToolTipIconToImage(_icon.Value);
             }
+
             tbTitle.Text = title;
             tbMessage.Text = message;
 
@@ -69,11 +72,13 @@ namespace ntfysh_client
                 _displayTimeoutTimer.Stop();
                 _displayTimeoutTimer.Dispose();
             }
+
             if (_updateTimer != null)
             {
                 _updateTimer.Stop();
                 _updateTimer.Dispose();
             }
+
             if (timeout_ms > 0)
             {
                 _displayTimeoutTimer = new System.Timers.Timer(timeout_ms);
@@ -94,7 +99,8 @@ namespace ntfysh_client
                     progressBar1.Visible = true;
                     lbTimeout.Visible = true;
                     _timeout = timeout_ms;
-                } else
+                }
+                else
                 {
                     progressBar1.Visible = false;
                     lbTimeout.Visible = false;
@@ -117,6 +123,7 @@ namespace ntfysh_client
             {
                 return;
             }
+
             progress = (int)((_timeout - _shownStopwatch.ElapsedMilliseconds) * 100 / _timeout);
             lbTimeout.Text = $"{(int)(_timeout - _shownStopwatch.ElapsedMilliseconds) / 1000}";
         }
@@ -124,15 +131,18 @@ namespace ntfysh_client
         protected override void SetVisibleCore(bool value)
         {
             SetWindowPosition();
+
             if (value)
             {
                 BringToFront();
+
                 AnimateWindow(
                     Handle,
                     time: 250,
                     flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_NEGATIVE
                 );
             }
+
             base.SetVisibleCore(value);
         }
 
@@ -152,17 +162,20 @@ namespace ntfysh_client
 
         private void ui_hide_window(object? sender, EventArgs? e)
         {
+
             AnimateWindow(
                 Handle,
                 time: 250,
                 flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_POSITIVE | NFWinUserAnimateWindowConstnats.AW_HIDE
             );
+
             IsVisible = false;
         }
 
         private void handleTimeout(object? sender, EventArgs? e)
         {
             cancelTimer();
+
             if (InvokeRequired)
             {
                 // on a background thread, so invoke on the UI thread
@@ -247,12 +260,14 @@ namespace ntfysh_client
                 _displayTimeoutTimer.Dispose();
                 _displayTimeoutTimer = null;
             }
+
             if (_updateTimer != null)
             {
                 _updateTimer.Stop();
                 _updateTimer.Dispose();
                 _updateTimer = null;
             }
+
             if (_shownStopwatch != null)
             {
                 _shownStopwatch.Stop();
