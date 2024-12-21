@@ -331,7 +331,7 @@ namespace ntfysh_client
             UseNativeWindowsNotifications = true,
             UseCustomTrayNotifications = false,
             CustomTrayNotificationsShowTimeoutBar = true,
-            CustomTrayNotificationsShowInDarkMode = true,
+            CustomTrayNotificationsShowInDarkMode = false,
         };
         
         private void MergeSettingsRevisions(SettingsModel older, SettingsModel newer)
