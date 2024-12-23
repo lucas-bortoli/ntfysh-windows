@@ -20,8 +20,8 @@ namespace ntfysh_client
         private System.Windows.Forms.Timer? _updateTimer = null;
         private Stopwatch? _shownStopwatch = null;
 
-        private BaseTheme _darkModeTheme = new DarkModeTheme();
-        private BaseTheme _defaultTheme = new DefaultTheme();
+        private readonly BaseTheme _darkModeTheme = new DarkModeTheme();
+        private readonly BaseTheme _defaultTheme = new DefaultTheme();
         private BaseTheme? _theme = null;
 
         public NotificationDialog()
@@ -41,14 +41,7 @@ namespace ntfysh_client
                 HandleTimeout(null, null);
             }
 
-            if(showInDarkMode)
-            {
-                _theme = _darkModeTheme;
-            }
-            else
-            {
-                _theme = _defaultTheme;
-            }
+            _theme = showInDarkMode ? _darkModeTheme : _defaultTheme;
 
             ApplyTheme();
 
@@ -111,7 +104,7 @@ namespace ntfysh_client
 
         private void ApplyTheme()
         {
-            if (_theme is null) _theme = _defaultTheme;
+            _theme ??= _defaultTheme;
 
             // back colors
             BackColor = _theme.BackgroundColor;
@@ -139,7 +132,7 @@ namespace ntfysh_client
             if (_shownStopwatch is null) return;
 
             ProgressBar1.Value = (_timeoutSeconds - _shownStopwatch.Elapsed.Seconds) * 100 / _timeoutSeconds;
-            LblTimeout.Text = $"{_timeoutSeconds - _shownStopwatch.Elapsed.Seconds}";
+            LblTimeout.Text = $@"{_timeoutSeconds - _shownStopwatch.Elapsed.Seconds}";
         }
 
         protected override void SetVisibleCore(bool value)
@@ -153,7 +146,7 @@ namespace ntfysh_client
                 AnimateWindow(
                     Handle,
                     time: 250,
-                    flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_NEGATIVE
+                    flags: NFWinUserAnimateWindowConstants.AW_SLIDE | NFWinUserAnimateWindowConstants.AW_VER_NEGATIVE
                 );
             }
 
@@ -162,11 +155,11 @@ namespace ntfysh_client
 
         private void SetWindowPosition()
         {
-            int workingtop = Screen.PrimaryScreen.WorkingArea.Height - Height;
-            Top = workingtop - NotificationDialog.ScreenMargin;
+            var workingTop = Screen.PrimaryScreen.WorkingArea.Height - Height;
+            Top = workingTop - NotificationDialog.ScreenMargin;
 
-            int workingleft = Screen.PrimaryScreen.WorkingArea.Width - Width;
-            Left = workingleft - NotificationDialog.ScreenMargin;
+            var workingLeft = Screen.PrimaryScreen.WorkingArea.Width - Width;
+            Left = workingLeft - NotificationDialog.ScreenMargin;
         }
 
         private void UIThreadAnimatedHideWindow(object? sender, EventArgs? e)
@@ -175,7 +168,7 @@ namespace ntfysh_client
             AnimateWindow(
                 Handle,
                 time: 250,
-                flags: NFWinUserAnimateWindowConstnats.AW_SLIDE | NFWinUserAnimateWindowConstnats.AW_VER_POSITIVE | NFWinUserAnimateWindowConstnats.AW_HIDE
+                flags: NFWinUserAnimateWindowConstants.AW_SLIDE | NFWinUserAnimateWindowConstants.AW_VER_POSITIVE | NFWinUserAnimateWindowConstants.AW_HIDE
             );
 
             Visible = false;
@@ -219,7 +212,7 @@ namespace ntfysh_client
             Visible = false;
         }
 
-        private class NFWinUserAnimateWindowConstnats
+        private class NFWinUserAnimateWindowConstants
         {
             public const int AW_HOR_POSITIVE = 0x00000001;
             public const int AW_HOR_NEGATIVE = 0x00000002;
