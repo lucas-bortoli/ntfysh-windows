@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Windows.Forms;
+using static ntfysh_client.SettingsModel;
 
 namespace ntfysh_client
 {
     public partial class SettingsDialog : Form
     {
+        public NotificationsType NotificationsMethod { get; set; }
+
         public decimal Timeout
         {
             get => timeout.Value;
@@ -31,6 +34,7 @@ namespace ntfysh_client
             {
                 useNativeWindowsNotifications.Checked = value;
                 groupCustomNotificationSettings.Enabled = !value;
+                NotificationsMethod = (value) ? NotificationsType.NativeWindows : NotificationsType.CustomTray;
             }
         }
 
@@ -40,6 +44,7 @@ namespace ntfysh_client
             set {
                 useCustomTrayNotifications.Checked = value;
                 groupCustomNotificationSettings.Enabled = value;
+                NotificationsMethod = (value) ? NotificationsType.NativeWindows : NotificationsType.CustomTray;
             }
         }
         #endregion

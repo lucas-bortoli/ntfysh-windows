@@ -73,7 +73,7 @@ namespace ntfysh_client
 
             string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
 
-            if (Program.Settings.UseNativeWindowsNotifications)
+            if (Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.NativeWindows)
             {
                 notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
             }
@@ -152,8 +152,8 @@ namespace ntfysh_client
             //Load current settings into dialog
             dialog.ReconnectAttempts = Program.Settings.ReconnectAttempts;
             dialog.ReconnectAttemptDelay = Program.Settings.ReconnectAttemptDelay;
-            dialog.UseNativeWindowsNotifications = Program.Settings.UseNativeWindowsNotifications;
-            dialog.UseCustomTrayNotifications = Program.Settings.UseCustomTrayNotifications;
+            dialog.UseNativeWindowsNotifications = Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.NativeWindows;
+            dialog.UseCustomTrayNotifications = Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.CustomTray;
             dialog.CustomTrayNotificationsShowTimeoutBar = Program.Settings.CustomTrayNotificationsShowTimeoutBar;
             dialog.CustomTrayNotificationsShowInDarkMode = Program.Settings.CustomTrayNotificationsShowInDarkMode;
             dialog.Timeout = Program.Settings.Timeout; // set timeout last so bounds are setup before setting value
@@ -168,8 +168,7 @@ namespace ntfysh_client
             Program.Settings.Timeout = dialog.Timeout;
             Program.Settings.ReconnectAttempts = dialog.ReconnectAttempts;
             Program.Settings.ReconnectAttemptDelay = dialog.ReconnectAttemptDelay;
-            Program.Settings.UseNativeWindowsNotifications = dialog.UseNativeWindowsNotifications;
-            Program.Settings.UseCustomTrayNotifications = dialog.UseCustomTrayNotifications;
+            Program.Settings.NotificationsMethod = (dialog.UseNativeWindowsNotifications)? SettingsModel.NotificationsType.NativeWindows : SettingsModel.NotificationsType.CustomTray;
             Program.Settings.CustomTrayNotificationsShowTimeoutBar = dialog.CustomTrayNotificationsShowTimeoutBar;
             Program.Settings.CustomTrayNotificationsShowInDarkMode = dialog.CustomTrayNotificationsShowInDarkMode;
 
@@ -328,8 +327,7 @@ namespace ntfysh_client
             Timeout = 5,
             ReconnectAttempts = 10,
             ReconnectAttemptDelay = 3,
-            UseNativeWindowsNotifications = true,
-            UseCustomTrayNotifications = false,
+            NotificationsMethod = SettingsModel.NotificationsType.NativeWindows,
             CustomTrayNotificationsShowTimeoutBar = true,
             CustomTrayNotificationsShowInDarkMode = false,
         };
@@ -346,8 +344,7 @@ namespace ntfysh_client
             //Apply settings introduced in Revision 2 (Native vs custom notifications)
             if (older.Revision < 2)
             {
-                older.UseNativeWindowsNotifications = newer.UseNativeWindowsNotifications;
-                older.UseCustomTrayNotifications = newer.UseCustomTrayNotifications;
+                older.NotificationsMethod = newer.NotificationsMethod;
                 older.CustomTrayNotificationsShowTimeoutBar = newer.CustomTrayNotificationsShowTimeoutBar;
                 older.CustomTrayNotificationsShowInDarkMode = newer.CustomTrayNotificationsShowInDarkMode;
             }
