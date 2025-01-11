@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Diagnostics;
 using ntfysh_client.Themes;
+using Microsoft.Win32;
+using System.Media;
 
 
 namespace ntfysh_client
@@ -33,7 +35,7 @@ namespace ntfysh_client
             InitializeWindowHidden();
         }
 
-        public void ShowNotification(string title, string message, int timeoutSeconds = 0, ToolTipIcon? icon = null, bool showTimeOutBar = true, bool showInDarkMode = true)
+        public void ShowNotification(string title, string message, int timeoutSeconds = 0, ToolTipIcon? icon = null, bool showTimeOutBar = true, bool showInDarkMode = true, bool playNotificationSound = false)
         {
             if (Visible)
             {
@@ -100,6 +102,10 @@ namespace ntfysh_client
             // ok, show the window
             Show();
             SetWindowPosition();
+            if(playNotificationSound)
+            {
+                PlayNotificationSound();
+            }
         }
 
         private void ApplyTheme()
@@ -264,6 +270,29 @@ namespace ntfysh_client
                 _shownStopwatch.Stop();
                 _shownStopwatch = null;
             }
+        }
+
+        private void PlayNotificationSound()
+        {
+            bool found = false;
+            try
+            {
+                using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"AppEvents\Schemes\Apps\.Default\Notification.Default\.Current");
+                if (key != null)
+                {
+                    Object? o = key.GetValue(null); // pass null to get (Default)
+                    if (o != null)
+                    {
+                        SoundPlayer theSound = new SoundPlayer((String)o);
+                        theSound.Play();
+                        found = true;
+                    }
+                }
+            }
+            catch
+            { }
+            if (!found)
+                SystemSounds.Beep.Play(); // consolation prize
         }
     }
 }

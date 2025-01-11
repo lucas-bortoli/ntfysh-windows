@@ -61,6 +61,12 @@ namespace ntfysh_client
             get => customNotificationsShowInDarkMode.Checked;
             set => customNotificationsShowInDarkMode.Checked = value;
         }
+
+        public bool CustomTrayNotificationsPlayDefaultWindowsSound
+        {
+            get => customNotificationsPlayWindowsNotificationAudio.Checked;
+            set => customNotificationsPlayWindowsNotificationAudio.Checked = value;
+        }
         #endregion
 
         public SettingsDialog()

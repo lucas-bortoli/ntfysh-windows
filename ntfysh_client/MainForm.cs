@@ -86,7 +86,8 @@ namespace ntfysh_client
                     timeoutSeconds: (int)Program.Settings.Timeout,
                     icon: priorityIcon,
                     showTimeOutBar: Program.Settings.CustomTrayNotificationsShowTimeoutBar,
-                    showInDarkMode: Program.Settings.CustomTrayNotificationsShowInDarkMode
+                    showInDarkMode: Program.Settings.CustomTrayNotificationsShowInDarkMode,
+                    playNotificationSound: Program.Settings.CustomTrayNotificationsPlayDefaultWindowsSound
                 );
             }
         }
@@ -156,6 +157,7 @@ namespace ntfysh_client
             dialog.UseCustomTrayNotifications = Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.CustomTray;
             dialog.CustomTrayNotificationsShowTimeoutBar = Program.Settings.CustomTrayNotificationsShowTimeoutBar;
             dialog.CustomTrayNotificationsShowInDarkMode = Program.Settings.CustomTrayNotificationsShowInDarkMode;
+            dialog.CustomTrayNotificationsPlayDefaultWindowsSound = Program.Settings.CustomTrayNotificationsPlayDefaultWindowsSound;
             dialog.Timeout = Program.Settings.Timeout; // set timeout last so bounds are setup before setting value
 
             //Show dialog
@@ -171,6 +173,7 @@ namespace ntfysh_client
             Program.Settings.NotificationsMethod = (dialog.UseNativeWindowsNotifications)? SettingsModel.NotificationsType.NativeWindows : SettingsModel.NotificationsType.CustomTray;
             Program.Settings.CustomTrayNotificationsShowTimeoutBar = dialog.CustomTrayNotificationsShowTimeoutBar;
             Program.Settings.CustomTrayNotificationsShowInDarkMode = dialog.CustomTrayNotificationsShowInDarkMode;
+            Program.Settings.CustomTrayNotificationsPlayDefaultWindowsSound = dialog.CustomTrayNotificationsPlayDefaultWindowsSound;
 
             //Save new settings persistently
             SaveSettingsToFile();
@@ -330,6 +333,7 @@ namespace ntfysh_client
             NotificationsMethod = SettingsModel.NotificationsType.NativeWindows,
             CustomTrayNotificationsShowTimeoutBar = true,
             CustomTrayNotificationsShowInDarkMode = false,
+            CustomTrayNotificationsPlayDefaultWindowsSound = true,
         };
         
         private void MergeSettingsRevisions(SettingsModel older, SettingsModel newer)
@@ -347,6 +351,7 @@ namespace ntfysh_client
                 older.NotificationsMethod = newer.NotificationsMethod;
                 older.CustomTrayNotificationsShowTimeoutBar = newer.CustomTrayNotificationsShowTimeoutBar;
                 older.CustomTrayNotificationsShowInDarkMode = newer.CustomTrayNotificationsShowInDarkMode;
+                older.CustomTrayNotificationsPlayDefaultWindowsSound = newer.CustomTrayNotificationsPlayDefaultWindowsSound;
             }
 
             //Update the revision

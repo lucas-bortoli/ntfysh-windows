@@ -42,6 +42,7 @@ namespace ntfysh_client
             useCustomTrayNotifications = new System.Windows.Forms.RadioButton();
             useNativeWindowsNotifications = new System.Windows.Forms.RadioButton();
             groupCustomNotificationSettings = new System.Windows.Forms.GroupBox();
+            customNotificationsPlayWindowsNotificationAudio = new System.Windows.Forms.CheckBox();
             customNotificationsShowInDarkMode = new System.Windows.Forms.CheckBox();
             customNotificationsShowTimeoutBar = new System.Windows.Forms.CheckBox();
             label1 = new System.Windows.Forms.Label();
@@ -59,7 +60,7 @@ namespace ntfysh_client
             buttonPanel.Controls.Add(cancelButton);
             buttonPanel.Controls.Add(saveButton);
             buttonPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            buttonPanel.Location = new System.Drawing.Point(0, 316);
+            buttonPanel.Location = new System.Drawing.Point(0, 336);
             buttonPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             buttonPanel.Name = "buttonPanel";
             buttonPanel.Size = new System.Drawing.Size(531, 51);
@@ -174,13 +175,24 @@ namespace ntfysh_client
             // 
             // groupCustomNotificationSettings
             // 
+            groupCustomNotificationSettings.Controls.Add(customNotificationsPlayWindowsNotificationAudio);
             groupCustomNotificationSettings.Controls.Add(customNotificationsShowInDarkMode);
             groupCustomNotificationSettings.Controls.Add(customNotificationsShowTimeoutBar);
             groupCustomNotificationSettings.Location = new System.Drawing.Point(12, 243);
             groupCustomNotificationSettings.Name = "groupCustomNotificationSettings";
-            groupCustomNotificationSettings.Size = new System.Drawing.Size(504, 67);
+            groupCustomNotificationSettings.Size = new System.Drawing.Size(504, 87);
             groupCustomNotificationSettings.TabIndex = 10;
             groupCustomNotificationSettings.TabStop = false;
+            // 
+            // customNotificationsPlayWindowsNotificationAudio
+            // 
+            customNotificationsPlayWindowsNotificationAudio.AutoSize = true;
+            customNotificationsPlayWindowsNotificationAudio.Location = new System.Drawing.Point(4, 59);
+            customNotificationsPlayWindowsNotificationAudio.Name = "customNotificationsPlayWindowsNotificationAudio";
+            customNotificationsPlayWindowsNotificationAudio.Size = new System.Drawing.Size(200, 19);
+            customNotificationsPlayWindowsNotificationAudio.TabIndex = 2;
+            customNotificationsPlayWindowsNotificationAudio.Text = "Play Windows notification sound";
+            customNotificationsPlayWindowsNotificationAudio.UseVisualStyleBackColor = true;
             // 
             // customNotificationsShowInDarkMode
             // 
@@ -216,7 +228,7 @@ namespace ntfysh_client
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.Color.White;
-            ClientSize = new System.Drawing.Size(531, 367);
+            ClientSize = new System.Drawing.Size(531, 387);
             Controls.Add(label1);
             Controls.Add(groupCustomNotificationSettings);
             Controls.Add(nativeVersusCustomNotificationsGroupBox);
@@ -266,5 +278,6 @@ namespace ntfysh_client
         private System.Windows.Forms.CheckBox customNotificationsShowTimeoutBar;
         private System.Windows.Forms.CheckBox customNotificationsShowInDarkMode;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox customNotificationsPlayWindowsNotificationAudio;
     }
 }
