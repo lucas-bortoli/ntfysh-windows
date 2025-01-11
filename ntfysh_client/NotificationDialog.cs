@@ -101,6 +101,7 @@ namespace ntfysh_client
 
             // ok, show the window
             Show();
+            ButtonClose.Focus(); // make sure the window is focused, not the title box.
             SetWindowPosition();
 
             if (playNotificationSound) PlayNotificationSound();
@@ -206,6 +207,7 @@ namespace ntfysh_client
         {
             Opacity = 0;
             ShowNotification("Title", "Message");
+            ButtonClose.Focus();
             Visible = false;
             Opacity = 1;
         }
