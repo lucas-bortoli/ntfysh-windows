@@ -16,6 +16,7 @@ namespace ntfysh_client
         private readonly NotificationListener _notificationListener;
         private bool _startInTray;
         private bool _trueExit;
+        private NotificationDialog _notificationDialog;
 
         public MainForm(NotificationListener notificationListener, bool startInTray = false)
         {
@@ -32,6 +33,8 @@ namespace ntfysh_client
         {
             LoadSettings();
             LoadTopics();
+
+            _notificationDialog = new NotificationDialog();
         }
 
         protected override void SetVisibleCore(bool value)
@@ -69,8 +72,24 @@ namespace ntfysh_client
             };
 
             string finalTitle = string.IsNullOrWhiteSpace(e.Title) ? $"{e.Sender.TopicId}@{e.Sender.ServerUrl}" : e.Title;
-            
-            notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
+
+            if (Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.NativeWindows)
+            {
+                notifyIcon.ShowBalloonTip((int)TimeSpan.FromSeconds((double)Program.Settings.Timeout).TotalMilliseconds, finalTitle, e.Message, priorityIcon);
+            }
+            else
+            {
+
+                _notificationDialog.ShowNotification(
+                    title: finalTitle,
+                    message: e.Message,
+                    timeoutSeconds: (int)Program.Settings.Timeout,
+                    icon: priorityIcon,
+                    showTimeOutBar: Program.Settings.CustomTrayNotificationsShowTimeoutBar,
+                    showInDarkMode: Program.Settings.CustomTrayNotificationsShowInDarkMode,
+                    playNotificationSound: Program.Settings.CustomTrayNotificationsPlayDefaultWindowsSound
+                );
+            }
         }
 
         private void OnConnectionMultiAttemptFailure(NotificationListener sender, SubscribedTopic topic)
@@ -132,10 +151,15 @@ namespace ntfysh_client
             using SettingsDialog dialog = new();
 
             //Load current settings into dialog
-            dialog.Timeout = Program.Settings.Timeout;
             dialog.ReconnectAttempts = Program.Settings.ReconnectAttempts;
             dialog.ReconnectAttemptDelay = Program.Settings.ReconnectAttemptDelay;
-            
+            dialog.UseNativeWindowsNotifications = Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.NativeWindows;
+            dialog.UseCustomTrayNotifications = Program.Settings.NotificationsMethod == SettingsModel.NotificationsType.CustomTray;
+            dialog.CustomTrayNotificationsShowTimeoutBar = Program.Settings.CustomTrayNotificationsShowTimeoutBar;
+            dialog.CustomTrayNotificationsShowInDarkMode = Program.Settings.CustomTrayNotificationsShowInDarkMode;
+            dialog.CustomTrayNotificationsPlayDefaultWindowsSound = Program.Settings.CustomTrayNotificationsPlayDefaultWindowsSound;
+            dialog.Timeout = Program.Settings.Timeout; // set timeout last so bounds are setup before setting value
+
             //Show dialog
             DialogResult result = dialog.ShowDialog();
 
@@ -146,7 +170,11 @@ namespace ntfysh_client
             Program.Settings.Timeout = dialog.Timeout;
             Program.Settings.ReconnectAttempts = dialog.ReconnectAttempts;
             Program.Settings.ReconnectAttemptDelay = dialog.ReconnectAttemptDelay;
-            
+            Program.Settings.NotificationsMethod = (dialog.UseNativeWindowsNotifications)? SettingsModel.NotificationsType.NativeWindows : SettingsModel.NotificationsType.CustomTray;
+            Program.Settings.CustomTrayNotificationsShowTimeoutBar = dialog.CustomTrayNotificationsShowTimeoutBar;
+            Program.Settings.CustomTrayNotificationsShowInDarkMode = dialog.CustomTrayNotificationsShowInDarkMode;
+            Program.Settings.CustomTrayNotificationsPlayDefaultWindowsSound = dialog.CustomTrayNotificationsPlayDefaultWindowsSound;
+
             //Save new settings persistently
             SaveSettingsToFile();
         }
@@ -298,10 +326,14 @@ namespace ntfysh_client
 
         private SettingsModel GetDefaultSettings() => new()
         {
-            Revision = 1,
+            Revision = 2,
             Timeout = 5,
             ReconnectAttempts = 10,
-            ReconnectAttemptDelay = 3
+            ReconnectAttemptDelay = 3,
+            NotificationsMethod = SettingsModel.NotificationsType.NativeWindows,
+            CustomTrayNotificationsShowTimeoutBar = true,
+            CustomTrayNotificationsShowInDarkMode = false,
+            CustomTrayNotificationsPlayDefaultWindowsSound = true,
         };
         
         private void MergeSettingsRevisions(SettingsModel older, SettingsModel newer)
@@ -311,6 +343,15 @@ namespace ntfysh_client
             {
                 older.ReconnectAttempts = newer.ReconnectAttempts;
                 older.ReconnectAttemptDelay = newer.ReconnectAttemptDelay;
+            }
+
+            //Apply settings introduced in Revision 2 (Native vs custom notifications)
+            if (older.Revision < 2)
+            {
+                older.NotificationsMethod = newer.NotificationsMethod;
+                older.CustomTrayNotificationsShowTimeoutBar = newer.CustomTrayNotificationsShowTimeoutBar;
+                older.CustomTrayNotificationsShowInDarkMode = newer.CustomTrayNotificationsShowInDarkMode;
+                older.CustomTrayNotificationsPlayDefaultWindowsSound = newer.CustomTrayNotificationsPlayDefaultWindowsSound;
             }
 
             //Update the revision
@@ -361,7 +402,7 @@ namespace ntfysh_client
             Program.Settings = settings;
             
             //Check the settings revision. If it is older than the current latest revision, apply the settings defaults missing from previous revision
-            if (Program.Settings.Revision < defaultSettings.ReconnectAttempts)
+            if (Program.Settings.Revision < defaultSettings.Revision)
             {
                 MergeSettingsRevisions(Program.Settings, defaultSettings);
                 SaveSettingsToFile();
